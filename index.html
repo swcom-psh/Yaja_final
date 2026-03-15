@@ -1053,6 +1053,8 @@
                 </div>
                 <input type="hidden" id="gasUrl"
                     value="https://script.google.com/macros/s/AKfycbym3wyc8rCc5LmZt2kOE6HcVQ_XF0g5DZ2Elm8Fi3a009XvBw6vrLrpVa_fOnbdo108/exec">
+                <input type="hidden" id="gasBackupUrl"
+                    value="https://script.google.com/macros/s/AKfycbxvmXW2lKnfqYWSW8DiXbucv0KHSn2sxoSClRXJq7qnlPzXkPdytY9b33J6K-SC3UEb/exec">
                 <div class="info-text"
                     style="display: flex; flex-wrap: wrap; justify-content: space-between; width: 100%;">
                     <div style="display: flex; gap: 8px;">
@@ -1545,6 +1547,9 @@
             }
 
             const gasUrl = document.getElementById('gasUrl').value.trim();
+            const gasBackupInput = document.getElementById('gasBackupUrl');
+            const gasBackupUrl = gasBackupInput ? gasBackupInput.value.trim() : '';
+
             if (!gasUrl) {
                 alert('먼저 Google Apps Script URL을 입력해주세요.');
                 return;
@@ -1579,12 +1584,31 @@
             btn.innerText = '⌛ 전송 중...';
 
             try {
-                const response = await fetch(gasUrl, {
-                    method: 'POST',
-                    mode: 'no-cors', // GAS web apps often require no-cors for simple requests from different origins
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(attendanceData)
-                });
+                const requests = [];
+
+                // 메인 시트 전송 요청
+                requests.push(
+                    fetch(gasUrl, {
+                        method: 'POST',
+                        mode: 'no-cors', // GAS web apps often require no-cors for simple requests from different origins
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(attendanceData)
+                    })
+                );
+
+                // 백업 시트 전송 요청 (URL이 올바르게 설정된 경우)
+                if (gasBackupUrl && gasBackupUrl !== "여기에_백업용_앱스스크립트_URL_입력") {
+                    requests.push(
+                        fetch(gasBackupUrl, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify(attendanceData)
+                        })
+                    );
+                }
+
+                await Promise.all(requests);
 
                 // Note: with no-cors, we won't be able to read the response object, but we can assume success if no error is thrown
                 alert(`${roomName}반 데이터 전송 완료! (구글 시트에서 확인해 주세요)`);
