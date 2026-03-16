@@ -261,6 +261,23 @@
             transform: scale(1.04);
         }
 
+        .teacher-desk {
+            width: 55%;
+            height: 40px;
+            background: #8B6552;
+            border: 3px solid #634333;
+            border-radius: 8px;
+            margin: 20px auto 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            letter-spacing: 0.8em;
+            font-size: 1.1rem;
+            box-shadow: var(--shadow-sm);
+        }
+
         .student-id {
             font-size: 0.72rem;
             font-weight: 600;
@@ -560,6 +577,10 @@
             color: var(--room-2-6);
         }
 
+        .print-title {
+            display: none;
+        }
+
         /* Print Styles */
         @media print {
             @page {
@@ -610,6 +631,16 @@
                 border: none !important;
                 overflow: hidden !important;
                 transform: none !important;
+            }
+
+            .print-title {
+                display: block !important;
+                font-size: 1.8rem !important;
+                font-weight: 800 !important;
+                text-align: center !important;
+                margin-bottom: 5mm !important;
+                color: #000 !important;
+                width: 100% !important;
             }
 
             .classroom-section[data-room="2-5"] {
@@ -683,23 +714,38 @@
                 font-size: 1rem !important;
             }
 
-            .grid-6x5 {
-                flex: 1 !important;
-                row-gap: 3mm !important;
-                column-gap: 0 !important;
-                grid-template-columns: 1fr 1fr 5mm 1fr 1fr 5mm 1fr 1fr !important;
-                margin: 0 !important;
-                overflow: hidden !important;
+            .teacher-desk {
+                display: flex !important;
+                height: 35px !important;
+                width: 55% !important;
+                margin: 5mm auto 0 !important;
+                background: #e2e8f0 !important;
+                color: #0f172a !important;
+                border: 2px solid #94a3b8 !important;
+                align-items: center !important;
+                justify-content: center !important;
+                font-size: 1.1rem !important;
+                font-weight: 800 !important;
+                border-radius: 6px !important;
+                letter-spacing: 1em !important;
             }
 
-            /* Reset aspect-ratio so cards don't overflow */
+            .grid-6x5 {
+                flex: none !important;
+                row-gap: 5mm !important;
+                column-gap: 0 !important;
+                grid-template-columns: 1fr 1fr 5mm 1fr 1fr 5mm 1fr 1fr !important;
+                margin: 5mm 0 !important;
+            }
+
+            /* Maintain aspect-ratio for consistent cell shapes */
             .seat {
-                aspect-ratio: unset !important;
-                border: 1.5px solid #cbd5e1 !important;
+                aspect-ratio: 1 / 1.15 !important;
+                border: 2px solid #1e293b !important;
                 border-radius: 8px !important;
                 background: white !important;
                 box-shadow: none !important;
-                height: 100% !important;
+                height: auto !important;
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: center !important;
@@ -711,7 +757,7 @@
             }
 
             .seat.empty {
-                border: 1px dashed #cbd5e1 !important;
+                border: 2px dashed #94a3b8 !important;
                 background: #f8fafc !important;
             }
 
@@ -1370,6 +1416,7 @@
                 section.setAttribute('data-room', roomName);
                 const roomColorClass = 'color-' + roomName;
                 section.innerHTML = `
+            <div class="print-title">2학년 자기주도적 학습 자리 배치표</div>
             <div class="classroom-header">
                 <div class="header-left">
                     <span class="room-title ${roomColorClass}">${roomName}반</span>
@@ -1378,7 +1425,7 @@
                 <span class="room-meta">${currentDay}요일 | ${students.length}명</span>
             </div>
             <div class="grid-6x5"></div>
-            <div class="teacher-desk"></div>
+            <div class="teacher-desk">교탁</div>
         `;
 
                 const grid = section.querySelector('.grid-6x5');

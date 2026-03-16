@@ -624,6 +624,10 @@
             transform: none;
         }
 
+        .print-title {
+            display: none;
+        }
+
         /* Print Styles */
         @media print {
             @page {
@@ -673,6 +677,16 @@
                 overflow: hidden !important;
                 transform: none !important;
                 /* disable any JS scale for each section */
+            }
+
+            .print-title {
+                display: block !important;
+                font-size: 1.8rem !important;
+                font-weight: 800 !important;
+                text-align: center !important;
+                margin-bottom: 5mm !important;
+                color: #000 !important;
+                width: 100% !important;
             }
 
             .classroom-section[data-room="1-5"] {
@@ -731,22 +745,21 @@
             }
 
             .grid-6x5 {
-                flex: 1 !important;
-                row-gap: 3mm !important;
+                flex: none !important;
+                row-gap: 5mm !important;
                 column-gap: 0 !important;
                 grid-template-columns: 1fr 1fr 5mm 1fr 1fr 5mm 1fr 1fr !important;
-                margin: 0 !important;
-                overflow: hidden !important;
+                margin: 5mm 0 !important;
             }
 
-            /* Reset aspect-ratio so cards don't overflow */
+            /* Maintain aspect-ratio for consistent cell shapes */
             .seat {
-                aspect-ratio: unset !important;
-                border: 1.5px solid #cbd5e1 !important;
+                aspect-ratio: 1 / 1.15 !important;
+                border: 2px solid #1e293b !important;
                 border-radius: 8px !important;
                 background: white !important;
                 box-shadow: none !important;
-                height: 100% !important;
+                height: auto !important;
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: center !important;
@@ -758,7 +771,7 @@
             }
 
             .seat.empty {
-                border: 1px dashed #cbd5e1 !important;
+                border: 2px dashed #94a3b8 !important;
                 background: #f8fafc !important;
             }
 
@@ -1470,6 +1483,7 @@
                 section.className = 'classroom-section';
                 section.setAttribute('data-room', roomName);
                 section.innerHTML = `
+                    <div class="print-title">1학년 자기주도적 학습 자리 배치표</div>
                     <div class="classroom-header">
                         <div class="header-left">
                             <span class="room-title">${roomName}교실</span>
