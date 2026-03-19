@@ -1558,10 +1558,20 @@
             renderAttendance();
         }
 
-        function showLoading(msg = '데이터 동기화 중...') {
+        const loadingMessages = [
+            "선생님, 오늘 하루도 고생 많으셨습니다! ☕",
+            "학생들 출석 현황을 꼼꼼하게 확인하고 있어요! 🕵️‍♂️",
+            "구글 시트와 열심히 요정들이 소통하는 중입니다... 📡",
+            "잠시만요! 최신 야자 명단을 준비하고 있습니다 ⏳",
+            "야자 감독 화이팅! 데이터를 안전하게 가져오고 있어요 🚀",
+            "출석부가 곧 도착합니다. 잠시만 기다려주세요! 📬"
+        ];
+
+        function showLoading() {
             const overlay = document.getElementById('loadingOverlay');
             if (overlay) {
-                document.getElementById('loadingText').innerText = msg;
+                const randomMsg = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+                document.getElementById('loadingText').innerText = randomMsg;
                 overlay.style.display = 'flex';
             }
         }
@@ -1588,7 +1598,7 @@
             if (sessionStorage.getItem(cacheKey)) return;
 
             fetchingRooms.add(roomName);
-            showLoading(`${roomName}반 출석 데이터를 불러오고 있습니다...`);
+            showLoading();
 
             try {
                 const url = `${gasUrl}${gasUrl.includes('?') ? '&' : '?'}date=${encodeURIComponent(dateStr)}&day=${encodeURIComponent(currentDay)}&period=${encodeURIComponent(currentPeriod + '교시')}&room=${encodeURIComponent(roomName)}`;
@@ -1614,7 +1624,7 @@
             } catch (error) {
                 console.error('Fetch error:', error);
                 if (error.name === 'AbortError') {
-                    alert(`${roomName}반 데이터를 불러오는 데 시간이 너무 오래 걸립니다. 네트워크를 확인해 주세요.`);
+                    alert(`${roomName}반 데이터를 불러오지 못했습니다. 버튼 옆의 '🔄 명단 갱신' 버튼을 수동으로 다시 눌러주세요.`);
                 }
             } finally {
                 fetchingRooms.delete(roomName);
@@ -1707,14 +1717,14 @@
                 const section = document.createElement('div');
                 section.className = 'attendance-section';
                 section.innerHTML = `
-                    <div class="classroom-header">
-                        <span class="room-title">${roomName}반 출석부 (${currentPeriod}교시)</span>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <button class="btn" style="padding:5px 12px; font-size:0.8rem;" onclick="sessionStorage.removeItem('${cacheKey}'); fetchAttendanceFromSheet('${roomName}')">🔄 명단 갱신</button>
+                    <div class="classroom-header" style="flex-wrap: wrap; gap: 12px;">
+                        <span class="room-title" style="word-break: keep-all; font-size: clamp(1.6rem, 5vw, 2.1rem); line-height: 1.2;">${roomName}반 출석부 (${currentPeriod}교시)</span>
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap: wrap; width: 100%; justify-content: flex-start; margin-top: 5px;">
+                            <button class="btn" style="padding:6px 14px; font-size:0.85rem;" onclick="sessionStorage.removeItem('${cacheKey}'); fetchAttendanceFromSheet('${roomName}')">🔄 명단 갱신</button>
                             <span class="room-meta">${currentDay}요일 | 총 ${students.length}명</span>
                         </div>
                     </div>
-                    <div class="table-responsive">
+                    <div class="table-responsive" style="overflow-x: auto; margin-top: 15px;">
                         <table class="attendance-table">
                             <thead>
                                 <tr>
