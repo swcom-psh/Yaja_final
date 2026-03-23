@@ -928,10 +928,21 @@
                 width: 100% !important;
             }
 
-            .classroom-section[data-room="2-3"] { border-top: 8px solid #4A90E2 !important; }
-            .classroom-section[data-room="2-4"] { border-top: 8px solid #50E3C2 !important; }
-            .classroom-section[data-room="2-5"] { border-top: 8px solid #f59e0b !important; }
-            .classroom-section[data-room="2-6"] { border-top: 8px solid #D0021B !important; }
+            .classroom-section[data-room="2-3"] {
+                border-top: 8px solid #4A90E2 !important;
+            }
+
+            .classroom-section[data-room="2-4"] {
+                border-top: 8px solid #50E3C2 !important;
+            }
+
+            .classroom-section[data-room="2-5"] {
+                border-top: 8px solid #f59e0b !important;
+            }
+
+            .classroom-section[data-room="2-6"] {
+                border-top: 8px solid #D0021B !important;
+            }
 
             .classroom-header {
                 display: flex !important;
@@ -949,7 +960,9 @@
                 color: #0f172a !important;
             }
 
-            .room-notice { display: none !important; }
+            .room-notice {
+                display: none !important;
+            }
 
             .room-meta {
                 font-size: 0.95rem !important;
@@ -978,8 +991,16 @@
                 align-items: center !important;
             }
 
-            .student-id { font-size: 0.65rem !important; color: #64748b !important; }
-            .student-name { font-size: 1.1rem !important; color: black !important; font-weight: 800 !important; }
+            .student-id {
+                font-size: 0.65rem !important;
+                color: #64748b !important;
+            }
+
+            .student-name {
+                font-size: 1.1rem !important;
+                color: black !important;
+                font-weight: 800 !important;
+            }
 
             .teacher-desk {
                 display: flex !important;
@@ -1415,57 +1436,61 @@
     <div id="mainApp" style="display: none;">
 
         <header>
-        <header>
-            <h1>2026학년도 2학년 1학기 자기주도적 학습 자리 배치도 <small style="font-size: 0.6rem; opacity: 0.7; vertical-align: middle;">v10</small></h1>
-            <div class="controls">
-                <div class="btn-group" id="dayButtons">
-                    <button class="btn day-btn active" data-day="월">월요일</button>
-                    <button class="btn day-btn" data-day="화">화요일</button>
-                    <button class="btn day-btn" data-day="수">수요일</button>
-                    <button class="btn day-btn" data-day="목">목요일</button>
-                    <button class="btn day-btn" data-day="금">금요일</button>
-                </div>
-                <div class="btn-group" id="periodButtons"
-                    style="background: var(--primary); padding: 4px; border-radius: 50px; gap: 4px; box-shadow: inset 0 2px 6px rgba(11, 110, 113, 0.2);">
-                    <button class="btn day-btn active" data-period="1" onclick="selectPeriod(this)">1교시</button>
-                    <button class="btn day-btn" data-period="2" onclick="selectPeriod(this)">2교시</button>
-                </div>
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="downloadPDF()">📄 PDF로 저장하기</button>
-                    <button class="btn btn-danger" id="btnResetArrangement" onclick="resetArrangement()">🔄 배치
-                        초기화</button>
-                    <button class="btn btn-danger" id="btnResetAttendance" onclick="resetAttendance()"
-                        style="display: none;">🗑️ 출석 초기화</button>
-                </div>
-                <div class="view-toggle">
-                    <button class="toggle-btn active" id="btnSeating" onclick="switchMode('seating')">🪑 자리 배치도</button>
-                    <button class="toggle-btn" id="btnAttendance" onclick="switchMode('attendance')">📋 출석 명단</button>
-                </div>
-                <input type="hidden" id="gasUrl"
-                    value="https://script.google.com/macros/s/AKfycbzp0FUJgcB00N2-WgC2t5ys7sfIS9UoCUjauR3-zYkKZuto4EdYD_O3TY7UoP1eOnOu/exec">
-                <input type="hidden" id="gasBackupUrl"
-                    value="https://script.google.com/macros/s/AKfycbxvmXW2lKnfqYWSW8DiXbucv0KHSn2sxoSClRXJq7qnlPzXkPdytY9b33J6K-SC3UEb/exec">
-                <div class="info-text"
-                    style="display: flex; flex-wrap: wrap; justify-content: space-between; width: 100%;">
-                    <div style="display: flex; gap: 8px;">
-                        <span>💡</span>
-                        <span>출석 체크 중 불편한 부분이나 개선할 것들이 있다면 2학년부 박상현T에게 말씀해주세요.</span>
-                        <button class="btn" style="padding:4px 12px; font-size:0.8rem; height: 28px; line-height: 1;"
-                            onclick="refreshStudentList()">🔄 명단 갱신</button>
+            <header>
+                <h1>2026학년도 2학년 1학기 자기주도적 학습 자리 배치도 <small
+                        style="font-size: 0.6rem; opacity: 0.7; vertical-align: middle;">v10</small></h1>
+                <div class="controls">
+                    <div class="btn-group" id="dayButtons">
+                        <button class="btn day-btn active" data-day="월">월요일</button>
+                        <button class="btn day-btn" data-day="화">화요일</button>
+                        <button class="btn day-btn" data-day="수">수요일</button>
+                        <button class="btn day-btn" data-day="목">목요일</button>
+                        <button class="btn day-btn" data-day="금">금요일</button>
                     </div>
-                    <div
-                        style="font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 10px; margin-left: auto;">
-                        👤 <span id="displaySupervisorName"></span> 선생님
-                        <button onclick="handleLogout()"
-                            style="background: white; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 0.8rem; cursor: pointer; color: var(--text-main); font-weight: 600; box-shadow: var(--shadow-sm); transition: all 0.2s;">로그아웃</button>
+                    <div class="btn-group" id="periodButtons"
+                        style="background: var(--primary); padding: 4px; border-radius: 50px; gap: 4px; box-shadow: inset 0 2px 6px rgba(11, 110, 113, 0.2);">
+                        <button class="btn day-btn active" data-period="1" onclick="selectPeriod(this)">1교시</button>
+                        <button class="btn day-btn" data-period="2" onclick="selectPeriod(this)">2교시</button>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="downloadPDF()">📄 저장하기</button>
+                        <button class="btn btn-danger" id="btnResetArrangement" onclick="resetArrangement()">🔄 배치
+                            초기화</button>
+                        <button class="btn btn-danger" id="btnResetAttendance" onclick="resetAttendance()"
+                            style="display: none;">🗑️ 출석 초기화</button>
+                    </div>
+                    <div class="view-toggle">
+                        <button class="toggle-btn active" id="btnSeating" onclick="switchMode('seating')">🪑 자리
+                            배치도</button>
+                        <button class="toggle-btn" id="btnAttendance" onclick="switchMode('attendance')">📋 출석
+                            명단</button>
+                    </div>
+                    <input type="hidden" id="gasUrl"
+                        value="https://script.google.com/macros/s/AKfycbzp0FUJgcB00N2-WgC2t5ys7sfIS9UoCUjauR3-zYkKZuto4EdYD_O3TY7UoP1eOnOu/exec">
+                    <input type="hidden" id="gasBackupUrl"
+                        value="https://script.google.com/macros/s/AKfycbxvmXW2lKnfqYWSW8DiXbucv0KHSn2sxoSClRXJq7qnlPzXkPdytY9b33J6K-SC3UEb/exec">
+                    <div class="info-text"
+                        style="display: flex; flex-wrap: wrap; justify-content: space-between; width: 100%;">
+                        <div style="display: flex; gap: 8px;">
+                            <span>💡</span>
+                            <span>출석 체크 중 불편한 부분이나 개선할 것들이 있다면 2학년부 박상현T에게 말씀해주세요.</span>
+                            <button class="btn"
+                                style="padding:4px 12px; font-size:0.8rem; height: 28px; line-height: 1;"
+                                onclick="refreshStudentList()">🔄 명단 갱신</button>
+                        </div>
+                        <div
+                            style="font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 10px; margin-left: auto;">
+                            👤 <span id="displaySupervisorName"></span> 선생님
+                            <button onclick="handleLogout()"
+                                style="background: white; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 0.8rem; cursor: pointer; color: var(--text-main); font-weight: 600; box-shadow: var(--shadow-sm); transition: all 0.2s;">로그아웃</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </header>
+            </header>
 
-        <div class="seating-container active" id="seatingDisplay"></div>
-        <div class="attendance-container" id="attendanceDisplay"></div>
-        <div id="toast"><span>✅</span> 배치 정보가 자동 저장되었습니다.</div>
+            <div class="seating-container active" id="seatingDisplay"></div>
+            <div class="attendance-container" id="attendanceDisplay"></div>
+            <div id="toast"><span>✅</span> 배치 정보가 자동 저장되었습니다.</div>
     </div> <!-- Close mainApp -->
 
     <div id="loadingOverlay">
@@ -2331,9 +2356,9 @@
                 margin: 0,
                 filename: `야자배치도_${currentDay}_${currentPeriod}교시.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2, 
-                    useCORS: true, 
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
                     logging: false,
                     letterRendering: true
                 },
