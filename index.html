@@ -13,6 +13,7 @@
     <!-- Pretendard Font -->
     <link rel="stylesheet" as="style" crossorigin
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             /* 🎨 Modern Teal & Cyan Theme (Travelin Inspired) */
@@ -874,6 +875,12 @@
                 print-color-adjust: exact !important;
             }
 
+            #mainApp {
+                display: block !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+
             header,
             button,
             .controls,
@@ -921,37 +928,10 @@
                 width: 100% !important;
             }
 
-            .classroom-section[data-room="2-5"] {
-                border-top: 8px solid #f59e0b !important;
-            }
-
-            .classroom-section[data-room="2-6"] {
-                border-top: 8px solid #D0021B !important;
-            }
-
-            .classroom-section[data-room="2-3"] {
-                border-top: 8px solid #4A90E2 !important;
-            }
-
-            .classroom-section[data-room="2-4"] {
-                border-top: 8px solid #50E3C2 !important;
-            }
-
-            .classroom-section[data-room="1-5"] {
-                border-top: 8px solid #f59e0b !important;
-            }
-
-            .classroom-section[data-room="1-6"] {
-                border-top: 8px solid #f43f5e !important;
-            }
-
-            .classroom-section[data-room="1-3"] {
-                border-top: 8px solid #6366f1 !important;
-            }
-
-            .classroom-section[data-room="1-4"] {
-                border-top: 8px solid #10b981 !important;
-            }
+            .classroom-section[data-room="2-3"] { border-top: 8px solid #4A90E2 !important; }
+            .classroom-section[data-room="2-4"] { border-top: 8px solid #50E3C2 !important; }
+            .classroom-section[data-room="2-5"] { border-top: 8px solid #f59e0b !important; }
+            .classroom-section[data-room="2-6"] { border-top: 8px solid #D0021B !important; }
 
             .classroom-header {
                 display: flex !important;
@@ -969,28 +949,37 @@
                 color: #0f172a !important;
             }
 
-            .room-notice {
-                display: none !important;
-            }
+            .room-notice { display: none !important; }
 
             .room-meta {
                 font-size: 0.95rem !important;
                 color: #475569 !important;
                 font-weight: 700 !important;
+                background: none !important;
+                padding: 0 !important;
             }
 
-            .blackboard {
-                height: 30px !important;
-                width: 55% !important;
-                margin: 0 auto 4mm !important;
-                flex-shrink: 0 !important;
-                background: #1e293b !important;
-                color: white !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                font-size: 1rem !important;
+            .grid-6x5 {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr 20px 1fr 1fr 20px 1fr 1fr !important;
+                gap: 4px !important;
+                margin-top: 5mm !important;
+                flex-grow: 1 !important;
             }
+
+            .seat {
+                border: 1px solid #cbd5e1 !important;
+                height: 18mm !important;
+                background: white !important;
+                color: black !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
+            }
+
+            .student-id { font-size: 0.65rem !important; color: #64748b !important; }
+            .student-name { font-size: 1.1rem !important; color: black !important; font-weight: 800 !important; }
 
             .teacher-desk {
                 display: flex !important;
@@ -1379,6 +1368,24 @@
             font-size: 1.1rem;
             letter-spacing: -0.02em;
         }
+
+        /* Styles for html2pdf export */
+        .is-exporting-pdf header,
+        .is-exporting-pdf .controls,
+        .is-exporting-pdf .view-toggle,
+        .is-exporting-pdf #toast,
+        .is-exporting-pdf .info-text,
+        .is-exporting-pdf .btn-group,
+        .is-exporting-pdf button {
+            display: none !important;
+        }
+
+        .is-exporting-pdf .classroom-section {
+            page-break-after: always;
+            margin-bottom: 0;
+            border: none !important;
+            box-shadow: none !important;
+        }
     </style>
 </head>
 
@@ -1409,7 +1416,7 @@
 
         <header>
         <header>
-            <h1>2026학년도 2학년 1학기 자기주도적 학습 자리 배치도 <small style="font-size: 0.6rem; opacity: 0.7; vertical-align: middle;">v8</small></h1>
+            <h1>2026학년도 2학년 1학기 자기주도적 학습 자리 배치도 <small style="font-size: 0.6rem; opacity: 0.7; vertical-align: middle;">v10</small></h1>
             <div class="controls">
                 <div class="btn-group" id="dayButtons">
                     <button class="btn day-btn active" data-day="월">월요일</button>
@@ -1424,7 +1431,7 @@
                     <button class="btn day-btn" data-period="2" onclick="selectPeriod(this)">2교시</button>
                 </div>
                 <div class="btn-group">
-                    <button class="btn btn-primary" onclick="window.print()">🖨️ A4 인쇄하기</button>
+                    <button class="btn btn-primary" onclick="downloadPDF()">📄 PDF로 저장하기</button>
                     <button class="btn btn-danger" id="btnResetArrangement" onclick="resetArrangement()">🔄 배치
                         초기화</button>
                     <button class="btn btn-danger" id="btnResetAttendance" onclick="resetAttendance()"
@@ -2312,6 +2319,42 @@
         // Removed createPetals to match the new minimalist theme
         // function createPetals() { ... }
 
+
+        async function downloadPDF() {
+            const element = document.getElementById('seatingDisplay');
+            if (!element || element.innerHTML.trim() === "") {
+                showAlert("저장할 자리 배치도 데이터가 없습니다.");
+                return;
+            }
+
+            const opt = {
+                margin: 0,
+                filename: `야자배치도_${currentDay}_${currentPeriod}교시.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true, 
+                    logging: false,
+                    letterRendering: true
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            showLoading();
+            document.body.classList.add('is-exporting-pdf');
+
+            try {
+                // html2pdf는 전역 객체로 로드됨
+                await html2pdf().set(opt).from(element).save();
+            } catch (error) {
+                console.error("PDF Export Error:", error);
+                showAlert("PDF 저장 중 오류가 발생했습니다.");
+            } finally {
+                document.body.classList.remove('is-exporting-pdf');
+                hideLoading();
+            }
+        }
 
         renderSeating();
     </script>
