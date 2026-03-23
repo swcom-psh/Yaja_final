@@ -1407,6 +1407,22 @@
             border: none !important;
             box-shadow: none !important;
         }
+
+        .is-exporting-pdf-월 .seat { background: #FDF6F0 !important; border: 1.5px solid #EAD8C8 !important; }
+        .is-exporting-pdf-화 .seat { background: #F3F9F6 !important; border: 1.5px solid #D1EADF !important; }
+        .is-exporting-pdf-수 .seat { background: #F3F7FD !important; border: 1.5px solid #D1E0F3 !important; }
+        .is-exporting-pdf-목 .seat { background: #F8F5FE !important; border: 1.5px solid #E0D8F1 !important; }
+        .is-exporting-pdf-금 .seat { background: #FDFDF3 !important; border: 1.5px solid #F1E9D1 !important; }
+
+        .is-exporting-pdf .seat::after {
+            display: none !important;
+        }
+
+        .is-exporting-pdf .student-name,
+        .is-exporting-pdf .student-id {
+            color: #0f172a !important;
+            opacity: 1 !important;
+        }
     </style>
 </head>
 
@@ -1438,7 +1454,7 @@
         <header>
             <header>
                 <h1>2026학년도 2학년 1학기 자기주도적 학습 자리 배치도 <small
-                        style="font-size: 0.6rem; opacity: 0.7; vertical-align: middle;">v10</small></h1>
+                        style="font-size: 0.6rem; opacity: 0.7; vertical-align: middle;">v14</small></h1>
                 <div class="controls">
                     <div class="btn-group" id="dayButtons">
                         <button class="btn day-btn active" data-day="월">월요일</button>
@@ -2367,7 +2383,9 @@
             };
 
             showLoading();
+            const exportDataDay = currentDay;
             document.body.classList.add('is-exporting-pdf');
+            document.body.classList.add(`is-exporting-pdf-${exportDataDay}`);
 
             try {
                 // html2pdf는 전역 객체로 로드됨
@@ -2377,6 +2395,7 @@
                 showAlert("PDF 저장 중 오류가 발생했습니다.");
             } finally {
                 document.body.classList.remove('is-exporting-pdf');
+                document.body.classList.remove(`is-exporting-pdf-${exportDataDay}`);
                 hideLoading();
             }
         }
