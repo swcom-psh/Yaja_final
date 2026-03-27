@@ -1545,7 +1545,10 @@
             const teacherPromise = fetchTeacherList();
             const studentPromise = fetchGlobalData(true); // 강제 캐시 무시
 
-            await Promise.all([teacherPromise, studentPromise]);
+            // 로그인 화면이 떠있는 동안 백그라운드에서 오늘 출결 데이터까지 싹 다 미리 로드 (로딩창 2번 뜨는 현상 방지)
+            const attendancePromise = fetchAllTodayAttendance(true);
+
+            await Promise.all([teacherPromise, studentPromise, attendancePromise]);
 
             if (supervisorName) {
                 // 이미 로그인된 세션이 있는 경우 바로 앱 시작 로직 수행
@@ -1562,8 +1565,28 @@
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('displaySupervisorName').innerText = supervisorName;
 
-            showLoading("오늘의 최신 출결 데이터를 불러오고 있습니다...");
-            await fetchAllTodayAttendance(); // 로그인 직후 시트의 모든 출결 데이터 강제 동기화 (v18)
+            // 누락된 출석부가 있는지 확인 (초기 로딩 시 실패했을 경우 대비)
+            let needsLoading = false;
+            const rooms = ['2-3', '2-4', '2-5', '2-6'];
+            const dMap = ['일', '월', '화', '수', '목', '금', '토'];
+            const actualToday = dMap[new Date().getDay()];
+
+            if (actualToday !== '일' && actualToday !== '토') {
+                const dateStr = getTodayDateString();
+                for (const p of ['1', '2']) {
+                    for (const r of rooms) {
+                        if (!sessionStorage.getItem(`synced_${dateStr}_${actualToday}_${p}_${r}`)) {
+                            needsLoading = true;
+                        }
+                    }
+                }
+            }
+
+            if (needsLoading) {
+                showLoading("누락된 출결 데이터를 마저 불러오고 있습니다...");
+                await fetchAllTodayAttendance(true);
+            }
+
             renderSeating();
             hideLoading();
         }
@@ -1841,7 +1864,7 @@
                 date: getTodayDateString(),
                 day: currentDay,
                 period: currentPeriod + '교시',
-                room: roomName,
+                room: roomName, // 구글 시트 날짜 자동 변환 방지용 작은따옴표 추가
                 supervisor: (typeof supervisorName !== 'undefined' && supervisorName) ? supervisorName : "선생님",
                 students: studentsData
             };
@@ -2165,7 +2188,7 @@
         }
 
         // 실제 오늘 날짜(현지 시간 기준)의 모든 반/모든 교시 데이터를 한꺼번에 로드 (모달)
-        async function fetchAllTodayAttendance() {
+        async function fetchAllTodayAttendance(silent = false) {
             const rooms = ['2-3', '2-4', '2-5', '2-6'];
             const periods = ['1', '2'];
 
@@ -2174,7 +2197,7 @@
             const actualToday = dMap[new Date().getDay()];
             if (actualToday === '일' || actualToday === '토') return;
 
-            showLoading("데이터를 빠르게 동기화하는 중입니다..."); // 모든 데이터 로드 시 로딩창 표시
+            if (!silent) showLoading("데이터를 빠르게 동기화하는 중입니다..."); // 모든 데이터 로드 시 로딩창 표시
 
             try {
                 // v19 개선: 병렬 실행(Promise.all)으로 속도 대폭 향상 (기존 10초+ -> 약 2초)
@@ -2188,7 +2211,7 @@
             } catch (error) {
                 console.error("전체 동기화 중 일부 오류 발생:", error);
             } finally {
-                hideLoading();
+                if (!silent) hideLoading();
             }
         }
 
@@ -2336,7 +2359,7 @@
                     date: getTodayDateString(),
                     day: currentDay,
                     period: currentPeriod + '교시',
-                    room: roomName,
+                    room: roomName, // 구글 시트 날짜 자동 변환 방지용 작은따옴표 추가
                     supervisor: supervisorName, // 감독 교사 데이터 추가
                     students: roomStudents.map((s, idx) => {
                         const checkbox = section.querySelector(`.attendance-checkbox[data-id="${s.학번}"]`);
