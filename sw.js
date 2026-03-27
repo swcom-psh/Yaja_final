@@ -38,12 +38,13 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 네트워크 우선, 실패 시 캐시 반환 (Stale-while-revalidate 느낌으로 구현하거나 Cache-first)
-// 여기서는 오프라인 지원을 위해 Cache-first (이미 있으면 캐시 사용) 전략을 사용합니다.
+// 온라인상에서 무조건 최신 데이터를 먼저 받아오고, 실패 시에만 기존 캐시를 반환하는 Network-First (네트워크 우선) 전략
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+    fetch(event.request)
+      .catch(() => {
+        // 네트워크 요청이 실패(ex: 오프라인)할 경우 캐시 확인
+        return caches.match(event.request);
+      })
   );
 });

@@ -2462,7 +2462,7 @@
                             const newWorker = reg.installing;
                             newWorker.onstatechange = () => {
                                 if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
-                                    location.reload();
+                                    // location.reload(); // 중복 새로고침 현상(더블 로딩) 방지를 위해 제거 (아래 controllerchange에서 1회만 처리)
                                 }
                             };
                         };
