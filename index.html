@@ -1926,24 +1926,9 @@
                 const students = roomStudents[roomName];
                 if (students.length === 0) return;
 
-                const storageKey = `yajaDataV2_${currentDay}_${roomName}`;
-                let savedIds = JSON.parse(localStorage.getItem(storageKey));
+                // 수동 브라우저 캐시 저장을 무시하고 무조건 구글 시트의 '순번' 배열 순서대로 지그재그 배치!
                 let gridSeats = new Array(30).fill(null);
-                const currentStudentMap = {};
-                students.forEach(s => currentStudentMap[s.학번] = s);
-
-                if (savedIds) {
-                    savedIds.forEach((id, idx) => {
-                        if (id && currentStudentMap[id]) {
-                            gridSeats[idx] = currentStudentMap[id];
-                            delete currentStudentMap[id];
-                        }
-                    });
-                    fillZigzag(gridSeats, Object.values(currentStudentMap).sort((a, b) => Number(a.순번) - Number(b.순번)));
-                } else {
-                    fillZigzag(gridSeats, students);
-                }
-                saveArrangement(roomName, gridSeats);
+                fillZigzag(gridSeats, students);
 
                 const section = document.createElement('div');
                 section.className = 'classroom-section';
@@ -1996,20 +1981,14 @@
                             if (isPresent) seat.classList.add('present');
 
                             seat.innerHTML = `<div class="student-id">${student.학번}</div><div class="student-name">${student.이름}</div>`;
-                            seat.setAttribute('draggable', 'true');
-
                             seat.onclick = () => {
                                 const nowPresent = sessionStorage.getItem(attKey) === 'true';
                                 sessionStorage.setItem(attKey, !nowPresent);
                                 seat.classList.toggle('present', !nowPresent);
                             };
-
-                            seat.addEventListener('dragstart', handleDragStart);
                         }
                     }
-                    seat.addEventListener('dragover', handleDragOver);
-                    seat.addEventListener('dragleave', handleDragLeave);
-                    seat.addEventListener('drop', handleDrop);
+                    // 구글 시트 순번 중심 철저화 (마우스 드래그 이동 원천 차단)
                     grid.appendChild(seat);
                 });
                 display.appendChild(section);
