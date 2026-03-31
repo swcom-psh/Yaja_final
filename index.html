@@ -1431,12 +1431,14 @@
         .is-exporting-pdf .seat.not-in-period {
             opacity: 1 !important;
             border-style: solid !important;
-            background-color: unset !important; /* 요일별 배경색이 그대로 적용되도록 방해하는 속성 제거 */
+            background-color: unset !important;
+            /* 요일별 배경색이 그대로 적용되도록 방해하는 속성 제거 */
         }
-        
+
         .is-exporting-pdf .seat.not-in-period .student-name,
         .is-exporting-pdf .seat.not-in-period .student-id {
-            color: #0f172a !important; /* 옅은 회색이 아닌 진한 남색으로 강제 통일 */
+            color: #0f172a !important;
+            /* 옅은 회색이 아닌 진한 남색으로 강제 통일 */
             opacity: 1 !important;
         }
 
@@ -1448,6 +1450,36 @@
         .is-exporting-pdf .student-id {
             color: #0f172a !important;
             opacity: 1 !important;
+        }
+
+        /* Overlap memo-like indicator */
+        .seat.overlap {
+            position: relative;
+        }
+
+        .overlap-marker {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-top: 20px solid #FF3B30;
+            border-left: 20px solid transparent;
+            border-top-right-radius: 18px;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .overlap-marker {
+                border-top: 14px solid #FF3B30;
+                border-left: 14px solid transparent;
+                border-top-right-radius: 6px;
+            }
+        }
+
+        .is-exporting-pdf .overlap-marker {
+            display: none !important;
         }
     </style>
 </head>
@@ -1943,7 +1975,7 @@
                 if (students.length === 0) return;
 
                 // 구글 시트 셀에 적힌 '숫자 (1~30)'를 실제 배치 좌석 번호로 매핑
-                let gridSeats = new Array(30).fill(null);
+                let gridSeats = new Array(30).fill(null).map(() => []);
                 students.forEach(student => {
                     let seatStr = student[`${currentDay}${currentPeriod}`];
                     // 이번 교시에 빈칸이라면 다른 교시 자리를 기본 자리로 인식하여 배치 (.not-in-period 처리 위해)
@@ -1957,7 +1989,7 @@
                             const row = 4 - Math.floor((seatNum - 1) / 6);
                             const col = (seatNum - 1) % 6;
                             const idx = row * 6 + col;
-                            gridSeats[idx] = student;
+                            gridSeats[idx].push(student);
                         }
                     }
                 });
@@ -1992,7 +2024,7 @@
                 }
 
                 const grid = section.querySelector('.grid-6x5');
-                gridSeats.forEach((student, i) => {
+                gridSeats.forEach((inSeat, i) => {
                     const col = i % 6;
                     if (col === 2 || col === 4) grid.appendChild(Object.assign(document.createElement('div'), { className: 'spacer' }));
 
@@ -2000,9 +2032,12 @@
                     seat.className = 'seat';
                     seat.setAttribute('data-index', i);
 
-                    if (!student) {
+                    if (inSeat.length === 0) {
                         seat.classList.add('empty');
                     } else {
+                        // 기존처럼 마지막 배정 학생을 기본으로 표시하되
+                        const student = inSeat[inSeat.length - 1];
+
                         const periodVal = student[`${currentDay}${currentPeriod}`];
                         const isStudentInPeriod = periodVal && String(periodVal).trim() !== '';
                         if (!isStudentInPeriod) {
@@ -2019,6 +2054,15 @@
                                 sessionStorage.setItem(attKey, !nowPresent);
                                 seat.classList.toggle('present', !nowPresent);
                             };
+                        }
+
+                        // 중복 시각적 알림 (엑셀 메모 기능과 유사)
+                        if (inSeat.length > 1) {
+                            seat.classList.add('overlap');
+                            const names = inSeat.map(s => s.이름).join(', ');
+                            seat.setAttribute('title', `⚠️ 중복 배정 알림: 이 자리에 ${names} 학생들이 함께 배정되어 있습니다. 구글 시트를 확인해주세요.`);
+                            // 우측 상단 삼각형 마커 추가
+                            seat.innerHTML += `<div class="overlap-marker"></div>`;
                         }
                     }
                     // 구글 시트 순번 중심 철저화 (마우스 드래그 이동 원천 차단)
