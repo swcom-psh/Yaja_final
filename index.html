@@ -1840,6 +1840,192 @@
                 border-top: 1px solid #eee;
             }
         }
+
+        /* ====== Memo (Long Press) Feature ====== */
+        #memoModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(29, 45, 46, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 25000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .memo-modal-content {
+            background: white;
+            padding: 28px 24px;
+            border-radius: 24px;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .memo-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .memo-modal-header .memo-icon {
+            font-size: 1.5rem;
+        }
+
+        .memo-modal-header .memo-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.03em;
+        }
+
+        .memo-student-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding: 10px 14px;
+            background: var(--secondary);
+            border-radius: 14px;
+        }
+
+        .memo-student-info .memo-student-name {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+        .memo-student-info .memo-student-id {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .memo-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #FDFCFB;
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        .memo-textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(17, 138, 142, 0.12);
+            background: white;
+        }
+
+        .memo-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .memo-modal-btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .memo-modal-btns button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .memo-btn-save {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(17, 138, 142, 0.3);
+        }
+
+        .memo-btn-save:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .memo-btn-cancel {
+            background: var(--secondary);
+            color: var(--primary);
+        }
+
+        .memo-btn-cancel:hover {
+            background: #D1E5E6;
+        }
+
+        .memo-btn-clear {
+            background: #FFF5F5;
+            color: #E07070;
+            flex: 0.6;
+        }
+
+        .memo-btn-clear:hover {
+            background: #FFE8E8;
+            color: #C05050;
+        }
+
+        /* Memo indicator badge on seats */
+        .seat-memo-badge {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            font-size: 0.6rem;
+            pointer-events: none;
+            z-index: 5;
+            line-height: 1;
+        }
+
+        .seat {
+            -webkit-touch-callout: none;
+        }
+
+        @media (max-width: 768px) {
+            .memo-modal-content {
+                max-width: 340px;
+                padding: 24px 20px;
+            }
+
+            .memo-textarea {
+                min-height: 80px;
+                font-size: 0.95rem;
+            }
+
+            .seat-memo-badge {
+                bottom: 2px;
+                right: 2px;
+                font-size: 0.5rem;
+            }
+        }
+
+        @media print {
+
+            .seat-memo-badge,
+            #memoModal {
+                display: none !important;
+            }
+        }
+
+        .is-exporting-pdf .seat-memo-badge {
+            display: none !important;
+        }
     </style>
 </head>
 
@@ -1862,6 +2048,26 @@
             <div id="modalBtns" class="modal-btns">
                 <button id="modalCancel" class="modal-btn modal-btn-cancel">취소</button>
                 <button id="modalConfirm" class="modal-btn modal-btn-confirm">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Memo Modal for Long Press -->
+    <div id="memoModal" onclick="if(event.target===this) closeMemoModal()">
+        <div class="memo-modal-content">
+            <div class="memo-modal-header">
+                <span class="memo-icon">📝</span>
+                <span class="memo-title">결석 사유 메모</span>
+            </div>
+            <div class="memo-student-info">
+                <span class="memo-student-name" id="memoStudentName"></span>
+                <span class="memo-student-id" id="memoStudentId"></span>
+            </div>
+            <textarea class="memo-textarea" id="memoTextarea" placeholder="결석 사유를 입력하세요 (예: 체험학습, 병결 등)"></textarea>
+            <div class="memo-modal-btns">
+                <button class="memo-btn-cancel" onclick="closeMemoModal()">취소</button>
+                <button class="memo-btn-clear" onclick="clearMemo()">삭제</button>
+                <button class="memo-btn-save" onclick="saveMemo()">저장</button>
             </div>
         </div>
     </div>
@@ -1958,20 +2164,17 @@
         document.addEventListener('DOMContentLoaded', async () => {
             showLoading('init', "데이터를 동기화하고 있습니다...");
 
-            // v20: 감독 교사 명단 및 학생 명단을 병렬로 강제 동기화 (최신 데이터 보장)
-            const teacherPromise = fetchTeacherList();
-            const studentPromise = fetchGlobalData(true); // 강제 캐시 무시
-
-            // 로그인 화면이 떠있는 동안 백그라운드에서 오늘 출결 데이터까지 싹 다 미리 로드 (로딩창 2번 뜨는 현상 방지)
-            const attendancePromise = fetchAllTodayAttendance(true);
-
-            await Promise.all([teacherPromise, studentPromise, attendancePromise]);
+            // 교사 명단 + 학생 명단만 병렬 로드 (출결 데이터는 로그인 후에 로드)
+            await Promise.all([
+                fetchTeacherList(),
+                fetchGlobalData(true)
+            ]);
 
             if (supervisorName) {
-                // 이미 로그인된 세션이 있는 경우 바로 앱 시작 로직 수행
+                // 이미 로그인된 세션: 바로 앱 시작
                 await startAppSession(supervisorName);
             } else {
-                hideLoading(); // 로그인 안된 상태면 즉시 로그인 화면 표시
+                hideLoading();
             }
         });
 
@@ -1982,30 +2185,12 @@
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('displaySupervisorName').innerText = supervisorName;
 
-            // 누락된 출석부가 있는지 확인 (초기 로딩 시 실패했을 경우 대비)
-            let needsLoading = false;
-            const rooms = ['2-3', '2-4', '2-5', '2-6'];
-            const dMap = ['일', '월', '화', '수', '목', '금', '토'];
-            const actualToday = dMap[new Date().getDay()];
-
-            if (actualToday !== '일' && actualToday !== '토') {
-                const dateStr = getTodayDateString();
-                for (const p of ['1', '2']) {
-                    for (const r of rooms) {
-                        if (!sessionStorage.getItem(`synced_${dateStr}_${actualToday}_${p}_${r}`)) {
-                            needsLoading = true;
-                        }
-                    }
-                }
-            }
-
-            if (needsLoading) {
-                showLoading('init', "누락된 출결 데이터를 마저 불러오고 있습니다...");
-                await fetchAllTodayAttendance(true);
-            }
-
+            // 자리 배치도 즉시 렌더링
             renderSeating();
             hideLoading();
+
+            // 출결 데이터는 백그라운드에서 점진적 로드 (각 fetch 완료 시 자동으로 UI 갱신)
+            fetchAllTodayAttendance(true);
         }
 
         async function handleLogin() {
@@ -2016,9 +2201,11 @@
                 return;
             }
 
-            // v20: 서버에서 받아온 명단이 아직 없다면 다시 시도
+            // 교사 명단이 아직 로드 안됐으면 대기
             if (allowedTeachers.length === 0) {
+                showLoading('init', "교사 명단을 확인하는 중...");
                 await fetchTeacherList();
+                hideLoading();
             }
 
             if (!allowedTeachers.includes(nameInput)) {
@@ -2026,13 +2213,15 @@
                 return;
             }
 
-            // 로그인 시점에도 명단이 최신인지 한 번 더 확인 (캐시 사용 가능)
-            showLoading('init', "명단 확인 중...");
-            const success = await fetchGlobalData();
-            if (!success) {
-                hideLoading();
-                showAlert('구글 시트에서 학생 명단을 가져오는 데 실패했습니다.');
-                return;
+            // 학생 데이터가 아직 없는 경우에만 로딩 (보통은 초기화에서 이미 로드 완료)
+            if (globalData.length === 0) {
+                showLoading('init', "학생 명단을 불러오는 중...");
+                const success = await fetchGlobalData(true);
+                if (!success) {
+                    hideLoading();
+                    showAlert('구글 시트에서 학생 명단을 가져오는 데 실패했습니다.');
+                    return;
+                }
             }
 
             await startAppSession(nameInput);
@@ -2314,6 +2503,133 @@
             }
         }
 
+        // ====== Memo (Long Press) Feature ======
+        let memoCurrentStudentId = null;
+        let memoCurrentDay = null;
+        let memoCurrentPeriod = null;
+
+        function openMemoModal(studentId, studentName, day, period) {
+            memoCurrentStudentId = studentId;
+            memoCurrentDay = day;
+            memoCurrentPeriod = period;
+
+            document.getElementById('memoStudentName').innerText = studentName;
+            document.getElementById('memoStudentId').innerText = studentId;
+
+            const remarkKey = `rem_${day}_${period}_${studentId}`;
+            const existing = sessionStorage.getItem(remarkKey) || '';
+            document.getElementById('memoTextarea').value = existing;
+
+            document.getElementById('memoModal').style.display = 'flex';
+
+            setTimeout(() => {
+                document.getElementById('memoTextarea').focus();
+            }, 300);
+        }
+
+        function closeMemoModal() {
+            document.getElementById('memoModal').style.display = 'none';
+            memoCurrentStudentId = null;
+        }
+
+        function saveMemo() {
+            if (!memoCurrentStudentId) return;
+            const text = document.getElementById('memoTextarea').value.trim();
+            const remarkKey = `rem_${memoCurrentDay}_${memoCurrentPeriod}_${memoCurrentStudentId}`;
+            if (text) {
+                sessionStorage.setItem(remarkKey, text);
+            } else {
+                sessionStorage.removeItem(remarkKey);
+            }
+
+            closeMemoModal();
+            showToast(text ? '📝 메모가 저장되었습니다.' : '🗑️ 메모가 삭제되었습니다.');
+
+            if (currentMode === 'seating') renderSeating();
+            else if (currentMode === 'attendance') renderAttendance();
+        }
+
+        function clearMemo() {
+            document.getElementById('memoTextarea').value = '';
+        }
+
+        /**
+         * 좌석에 롱프레스(꾹 누르기) 이벤트를 설정합니다.
+         * - 짧게 누르면: 출석/결석 토글 (기존 기능)
+         * - 길게 누르면 (500ms): 메모 입력 모달 표시
+         */
+        function setupLongPress(seatElement, studentId, studentName, attKey) {
+            let pressTimer = null;
+            let isLong = false;
+            let startX = 0, startY = 0;
+
+            seatElement.style.touchAction = 'manipulation';
+
+            const startPress = (x, y) => {
+                isLong = false;
+                startX = x;
+                startY = y;
+                pressTimer = setTimeout(() => {
+                    isLong = true;
+                    if (navigator.vibrate) navigator.vibrate(50);
+                    openMemoModal(studentId, studentName, currentDay, currentPeriod);
+                }, 500);
+            };
+
+            const cancelPress = () => {
+                clearTimeout(pressTimer);
+            };
+
+            const endPress = () => {
+                clearTimeout(pressTimer);
+                if (!isLong) {
+                    const nowPresent = sessionStorage.getItem(attKey) === 'true';
+                    sessionStorage.setItem(attKey, !nowPresent);
+                    seatElement.classList.toggle('present', !nowPresent);
+                }
+                isLong = false;
+            };
+
+            // Touch events (mobile)
+            seatElement.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                startPress(touch.clientX, touch.clientY);
+            }, { passive: true });
+
+            seatElement.addEventListener('touchmove', (e) => {
+                const touch = e.touches[0];
+                const dx = Math.abs(touch.clientX - startX);
+                const dy = Math.abs(touch.clientY - startY);
+                if (dx > 10 || dy > 10) cancelPress();
+            }, { passive: true });
+
+            seatElement.addEventListener('touchend', (e) => {
+                endPress();
+                e.preventDefault();
+            });
+
+            // Mouse events (desktop)
+            seatElement.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return;
+                startPress(e.clientX, e.clientY);
+            });
+
+            seatElement.addEventListener('mousemove', (e) => {
+                if (!pressTimer) return;
+                const dx = Math.abs(e.clientX - startX);
+                const dy = Math.abs(e.clientY - startY);
+                if (dx > 10 || dy > 10) cancelPress();
+            });
+
+            seatElement.addEventListener('mouseup', (e) => {
+                if (e.button !== 0) return;
+                endPress();
+            });
+
+            seatElement.addEventListener('mouseleave', cancelPress);
+            seatElement.addEventListener('contextmenu', (e) => e.preventDefault());
+        }
+
         function renderSeating() {
             const display = document.getElementById('seatingDisplay');
             display.innerHTML = '';
@@ -2425,12 +2741,13 @@
                             const isPresent = sessionStorage.getItem(attKey) === 'true';
                             if (isPresent) seat.classList.add('present');
 
+                            const remarkKey = `rem_${currentDay}_${currentPeriod}_${student.학번}`;
+                            const hasMemo = sessionStorage.getItem(remarkKey);
                             seat.innerHTML = `<div class="student-id">${student.학번}</div><div class="student-name">${student.이름}</div>`;
-                            seat.onclick = () => {
-                                const nowPresent = sessionStorage.getItem(attKey) === 'true';
-                                sessionStorage.setItem(attKey, !nowPresent);
-                                seat.classList.toggle('present', !nowPresent);
-                            };
+                            if (hasMemo) {
+                                seat.innerHTML += `<div class="seat-memo-badge" title="${hasMemo}">📝</div>`;
+                            }
+                            setupLongPress(seat, student.학번, student.이름, attKey);
                         }
 
                         // 중복 시각적 알림 (엑셀 메모 기능과 유사)
