@@ -2481,9 +2481,10 @@
             }
 
             const studentsData = activeStudents.map(s => {
-                const attKey = `att_${currentDay}_${currentPeriod}_${s.학번}`;
+                const dateStr = getTodayDateString();
+                const attKey = `att_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`;
                 const isPresent = sessionStorage.getItem(attKey) === 'true';
-                const remark = sessionStorage.getItem(`rem_${currentDay}_${currentPeriod}_${s.학번}`) || "";
+                const remark = sessionStorage.getItem(`rem_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`) || "";
                 return {
                     id: s.학번,
                     name: s.이름,
@@ -2536,7 +2537,8 @@
             document.getElementById('memoStudentName').innerText = studentName;
             document.getElementById('memoStudentId').innerText = studentId;
 
-            const remarkKey = `rem_${day}_${period}_${studentId}`;
+            const dateStr = getTodayDateString();
+            const remarkKey = `rem_${dateStr}_${day}_${period}_${studentId}`;
             const existing = sessionStorage.getItem(remarkKey) || '';
             document.getElementById('memoTextarea').value = existing;
 
@@ -2555,7 +2557,8 @@
         function saveMemo() {
             if (!memoCurrentStudentId) return;
             const text = document.getElementById('memoTextarea').value.trim();
-            const remarkKey = `rem_${memoCurrentDay}_${memoCurrentPeriod}_${memoCurrentStudentId}`;
+            const dateStr = getTodayDateString();
+            const remarkKey = `rem_${dateStr}_${memoCurrentDay}_${memoCurrentPeriod}_${memoCurrentStudentId}`;
             if (text) {
                 sessionStorage.setItem(remarkKey, text);
             } else {
@@ -2780,11 +2783,11 @@
                             seat.classList.add('not-in-period');
                             seat.innerHTML = `<div class="student-id">${student.학번}</div><div class="student-name">${student.이름}</div>`;
                         } else {
-                            const attKey = `att_${currentDay}_${currentPeriod}_${student.학번}`;
+                            const attKey = `att_${dateStr}_${currentDay}_${currentPeriod}_${student.학번}`;
                             const isPresent = sessionStorage.getItem(attKey) === 'true';
                             if (isPresent) seat.classList.add('present');
 
-                            const remarkKey = `rem_${currentDay}_${currentPeriod}_${student.학번}`;
+                            const remarkKey = `rem_${dateStr}_${currentDay}_${currentPeriod}_${student.학번}`;
                             const hasMemo = sessionStorage.getItem(remarkKey);
                             seat.innerHTML = `<div class="student-id">${student.학번}</div><div class="student-name">${student.이름}</div>`;
                             if (hasMemo) {
@@ -2865,8 +2868,9 @@
             });
         }
         function resetAttendance() {
-            showConfirm(`현재 요일(${currentDay}요일)의 출석 체크 내역을 모두 초기화하시겠습니까?`, () => {
-                Object.keys(sessionStorage).filter(k => k.startsWith(`att_${currentDay}_`) || k.startsWith(`rem_${currentDay}_`)).forEach(k => sessionStorage.removeItem(k));
+            showConfirm(`오늘(${getTodayDateString()})의 출석 체크 내역을 모두 초기화하시겠습니까?`, () => {
+                const dateStr = getTodayDateString();
+                Object.keys(sessionStorage).filter(k => k.startsWith(`att_${dateStr}_`) || k.startsWith(`rem_${dateStr}_`)).forEach(k => sessionStorage.removeItem(k));
                 showToast('출석 데이터가 초기화되었습니다.');
                 renderAttendance();
             });
@@ -2957,8 +2961,8 @@
                 if (results && typeof results === 'object') {
                     Object.keys(results).forEach(studentId => {
                         const data = results[studentId];
-                        sessionStorage.setItem(`att_${day}_${period}_${studentId}`, data.status);
-                        sessionStorage.setItem(`rem_${day}_${period}_${studentId}`, data.remark || "");
+                        sessionStorage.setItem(`att_${dateStr}_${day}_${period}_${studentId}`, data.status);
+                        sessionStorage.setItem(`rem_${dateStr}_${day}_${period}_${studentId}`, data.remark || "");
                     });
                     sessionStorage.setItem(cacheKey, 'true');
 
@@ -3098,8 +3102,9 @@
                             </thead>
                             <tbody>
                                 ${students.map((s, idx) => {
-                    const stateKey = `att_${currentDay}_${currentPeriod}_${s.학번}`;
-                    const remarkKey = `rem_${currentDay}_${currentPeriod}_${s.학번}`;
+                    const dateStr = getTodayDateString();
+                    const stateKey = `att_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`;
+                    const remarkKey = `rem_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`;
                     const isChecked = sessionStorage.getItem(stateKey) === 'true';
                     const remarkValue = sessionStorage.getItem(remarkKey) || '';
                     return `
