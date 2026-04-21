@@ -2561,15 +2561,18 @@
         function setupLongPress(seatElement, studentId, studentName, attKey) {
             let pressTimer = null;
             let isLong = false;
+            let isMoved = false;
             let startX = 0, startY = 0;
 
-            seatElement.style.touchAction = 'manipulation';
+            seatElement.style.touchAction = 'pan-y'; // 가로 스크롤 방해 금지 및 터치 최적화
 
             const startPress = (x, y) => {
                 isLong = false;
+                isMoved = false;
                 startX = x;
                 startY = y;
                 pressTimer = setTimeout(() => {
+                    if (isMoved) return;
                     isLong = true;
                     if (navigator.vibrate) navigator.vibrate(50);
                     openMemoModal(studentId, studentName, currentDay, currentPeriod);
@@ -2582,12 +2585,14 @@
 
             const endPress = () => {
                 clearTimeout(pressTimer);
-                if (!isLong) {
+                // 롱프레스가 아니었고, 움직임이 없었을 때만 출석 토글
+                if (!isLong && !isMoved) {
                     const nowPresent = sessionStorage.getItem(attKey) === 'true';
                     sessionStorage.setItem(attKey, !nowPresent);
                     seatElement.classList.toggle('present', !nowPresent);
                 }
                 isLong = false;
+                isMoved = false;
             };
 
             // Touch events (mobile)
@@ -2600,12 +2605,15 @@
                 const touch = e.touches[0];
                 const dx = Math.abs(touch.clientX - startX);
                 const dy = Math.abs(touch.clientY - startY);
-                if (dx > 10 || dy > 10) cancelPress();
+                // 10px 이상 움직이면 스크롤로 간주하여 모든 동작 취소
+                if (dx > 10 || dy > 10) {
+                    isMoved = true;
+                    cancelPress();
+                }
             }, { passive: true });
 
             seatElement.addEventListener('touchend', (e) => {
                 endPress();
-                e.preventDefault();
             });
 
             // Mouse events (desktop)
@@ -2618,7 +2626,10 @@
                 if (!pressTimer) return;
                 const dx = Math.abs(e.clientX - startX);
                 const dy = Math.abs(e.clientY - startY);
-                if (dx > 10 || dy > 10) cancelPress();
+                if (dx > 10 || dy > 10) {
+                    isMoved = true;
+                    cancelPress();
+                }
             });
 
             seatElement.addEventListener('mouseup', (e) => {
@@ -2626,7 +2637,10 @@
                 endPress();
             });
 
-            seatElement.addEventListener('mouseleave', cancelPress);
+            seatElement.addEventListener('mouseleave', () => {
+                cancelPress();
+                isMoved = false;
+            });
             seatElement.addEventListener('contextmenu', (e) => e.preventDefault());
         }
 
