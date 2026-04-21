@@ -1995,6 +1995,8 @@
 
         .seat {
             -webkit-touch-callout: none;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         @media (max-width: 768px) {
@@ -2558,34 +2560,43 @@
          * - 짧게 누르면: 출석/결석 토글 (기존 기능)
          * - 길게 누르면 (500ms): 메모 입력 모달 표시
          */
+        let lastTouchTime = 0;
+
         function setupLongPress(seatElement, studentId, studentName, attKey) {
             let pressTimer = null;
             let isLong = false;
             let isMoved = false;
             let startX = 0, startY = 0;
 
-            seatElement.style.touchAction = 'pan-y'; // 가로 스크롤 방해 금지 및 터치 최적화
+            seatElement.style.touchAction = 'pan-y'; 
 
-            const startPress = (x, y) => {
+            const startPress = (x, y, isTouch = false) => {
+                if (!isTouch && Date.now() - lastTouchTime < 500) return; // 마우스-터치 중복 발화 방지
+                
                 isLong = false;
                 isMoved = false;
                 startX = x;
                 startY = y;
+                
+                if (pressTimer) clearTimeout(pressTimer);
                 pressTimer = setTimeout(() => {
                     if (isMoved) return;
                     isLong = true;
                     if (navigator.vibrate) navigator.vibrate(50);
                     openMemoModal(studentId, studentName, currentDay, currentPeriod);
-                }, 500);
+                }, 600); // 500ms -> 600ms로 약간 여유있게
             };
 
             const cancelPress = () => {
                 clearTimeout(pressTimer);
             };
 
-            const endPress = () => {
+            const endPress = (isTouch = false) => {
+                if (!isTouch && Date.now() - lastTouchTime < 500) return;
+                if (isTouch) lastTouchTime = Date.now();
+
                 clearTimeout(pressTimer);
-                // 롱프레스가 아니었고, 움직임이 없었을 때만 출석 토글
+                
                 if (!isLong && !isMoved) {
                     const nowPresent = sessionStorage.getItem(attKey) === 'true';
                     sessionStorage.setItem(attKey, !nowPresent);
@@ -2598,35 +2609,35 @@
             // Touch events (mobile)
             seatElement.addEventListener('touchstart', (e) => {
                 const touch = e.touches[0];
-                startPress(touch.clientX, touch.clientY);
+                startPress(touch.clientX, touch.clientY, true);
             }, { passive: true });
 
             seatElement.addEventListener('touchmove', (e) => {
                 const touch = e.touches[0];
                 const dx = Math.abs(touch.clientX - startX);
                 const dy = Math.abs(touch.clientY - startY);
-                // 10px 이상 움직이면 스크롤로 간주하여 모든 동작 취소
-                if (dx > 10 || dy > 10) {
+                // 판별 임계값을 20px로 상향 (너무 민감하지 않게)
+                if (dx > 20 || dy > 20) {
                     isMoved = true;
                     cancelPress();
                 }
             }, { passive: true });
 
             seatElement.addEventListener('touchend', (e) => {
-                endPress();
+                endPress(true);
             });
 
             // Mouse events (desktop)
             seatElement.addEventListener('mousedown', (e) => {
                 if (e.button !== 0) return;
-                startPress(e.clientX, e.clientY);
+                startPress(e.clientX, e.clientY, false);
             });
 
             seatElement.addEventListener('mousemove', (e) => {
-                if (!pressTimer) return;
+                if (!pressTimer && !isMoved) return;
                 const dx = Math.abs(e.clientX - startX);
                 const dy = Math.abs(e.clientY - startY);
-                if (dx > 10 || dy > 10) {
+                if (dx > 20 || dy > 20) {
                     isMoved = true;
                     cancelPress();
                 }
@@ -2634,7 +2645,7 @@
 
             seatElement.addEventListener('mouseup', (e) => {
                 if (e.button !== 0) return;
-                endPress();
+                endPress(false);
             });
 
             seatElement.addEventListener('mouseleave', () => {
