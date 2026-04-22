@@ -16,47 +16,32 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
-            /* 🎨 Modern Teal & Cyan Theme (Travelin Inspired) */
-            --primary: #118A8E;
-            /* Deep Teal */
-            --primary-dark: #0B6E71;
-            --secondary: #E0F2F1;
-            /* Mint white */
+            /* 🎨 Minimalist Point Color Theme */
+            --primary: #4361EE; /* Vibrant Point Blue */
+            --primary-dark: #3A0CA3;
+            --secondary: #EBF0FF; /* Light blue background for active */
 
-            --bg-canvas: #F5FAFA;
-            /* Cool off-white */
+            --bg-canvas: #F4F7FE; /* Soft light gray-blue background */
             --card-bg: #FFFFFF;
 
-            --text-main: #1D2D2E;
-            /* Dark teal-gray */
-            --text-sub: #5F7D7E;
-            --text-muted: #8FA4A5;
+            --text-main: #2B2D42;
+            --text-sub: #8D99AE;
+            --text-muted: #A0ABC0;
 
-            --border: #D1E5E6;
-            /* Soft teal border */
-            --border-focus: #118A8E;
+            --border: #E2E8F0;
+            --border-focus: #4361EE;
 
-            /* Modern Soft Shadows */
-            --shadow-sm: 0 2px 12px rgba(17, 138, 142, 0.05);
-            --shadow-md: 0 8px 32px rgba(17, 138, 142, 0.12);
-            --shadow-lg: 0 16px 48px rgba(17, 138, 142, 0.15);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.08);
 
-            --drag-over: #F0FBFA;
+            --drag-over: #EBF0FF;
 
-            /* Attendance Table Colors */
-            --table-header: #F1F9F9;
-            --table-border: #E6EEEE;
-            --table-row-hover: #F8FCFC;
-
-            /* Room modern colors (Teal based) */
-            --room-2-3: #118A8E;
-            /* Theme Primary */
-            --room-2-4: #4DB6AC;
-            /* Teal 300 */
-            --room-2-5: #009688;
-            /* Teal 500 */
-            --room-2-6: #00796B;
-            /* Teal 700 */
+            /* Room modern point colors */
+            --room-2-3: #4361EE;
+            --room-2-4: #3A0CA3;
+            --room-2-5: #F72585;
+            --room-2-6: #4CC9F0;
         }
 
         * {
@@ -68,11 +53,6 @@
         body {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
             background-color: var(--bg-canvas);
-            background-image:
-                radial-gradient(circle at 15% 20%, rgba(17, 138, 142, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 85% 75%, rgba(77, 182, 172, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(0, 150, 136, 0.05) 0%, transparent 60%);
-            background-attachment: fixed;
             color: var(--text-main);
             line-height: 1.6;
             padding: 40px 20px;
@@ -84,32 +64,18 @@
             max-width: 1300px;
             margin: 0 auto 40px;
             text-align: center;
-            padding: 48px 40px;
-            background: linear-gradient(135deg, var(--primary) 0%, #0D6F72 100%);
-            border-radius: 36px;
+            padding: 40px 40px;
+            background: var(--card-bg);
+            border-radius: 24px;
             box-shadow: var(--shadow-md);
-            border: none;
-            position: relative;
-            overflow: hidden;
-            color: white;
-        }
-
-        header::before {
-            content: '';
-            position: absolute;
-            top: -50px;
-            right: -50px;
-            width: 200px;
-            height: 200px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            pointer-events: none;
+            border: 1px solid var(--border);
+            color: var(--text-main);
         }
 
         h1 {
             font-size: 2.2rem;
             font-weight: 800;
-            color: white;
+            color: var(--primary);
             margin-bottom: 24px;
             display: flex;
             align-items: center;
@@ -132,22 +98,20 @@
             justify-content: center;
         }
 
-        /* Day and Period Buttons Container to look like a green pill */
         #dayButtons,
         #periodButtons {
-            background: var(--primary);
+            background: var(--secondary);
             padding: 6px;
             border-radius: 50px;
             gap: 4px;
-            border: none;
-            box-shadow: inset 0 2px 6px rgba(11, 110, 113, 0.2);
+            border: 1px solid var(--border);
         }
 
         /* Turn day/period buttons into segment toggles */
         #dayButtons .day-btn,
         #periodButtons .day-btn {
             background: transparent;
-            color: rgba(255, 255, 255, 0.85);
+            color: var(--text-sub);
             border: none;
             box-shadow: none;
             padding: 10px 20px;
@@ -155,17 +119,16 @@
 
         #dayButtons .day-btn:hover,
         #periodButtons .day-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
+            color: var(--text-main);
             transform: none;
             border-color: transparent;
         }
 
         #dayButtons .day-btn.active,
         #periodButtons .day-btn.active {
-            background: white;
-            color: var(--primary-dark);
-            box-shadow: 0 2px 8px rgba(11, 110, 113, 0.3);
+            background: var(--card-bg);
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
             font-weight: 800;
             border: none;
         }
@@ -176,7 +139,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease-in-out;
-            border: 1.5px solid var(--border);
+            border: 1px solid var(--border);
             background: var(--card-bg);
             color: var(--text-sub);
             font-size: 0.93rem;
@@ -184,43 +147,35 @@
         }
 
         .btn:hover {
-            background: var(--secondary);
-            color: var(--primary-dark);
-            border-color: var(--primary);
+            background: var(--bg-canvas);
+            color: var(--text-main);
+            border-color: var(--border-focus);
             transform: translateY(-1px);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, #0D6F72 100%);
+            background: var(--primary);
             color: white;
             border: none;
-            box-shadow: 0 4px 16px rgba(17, 138, 142, 0.25);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, var(--primary-dark) 0%, #095C5E 100%);
+            background: var(--primary-dark);
             color: white;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(17, 138, 142, 0.35);
+            box-shadow: 0 6px 16px rgba(67, 97, 238, 0.3);
         }
 
         .btn-danger {
             background: #FFF5F5;
             color: #E07070;
-            border: 1.5px solid #F5D0D0;
+            border: 1px solid #F5D0D0;
         }
 
         .btn-danger:hover {
             background: #FFE8E8;
             color: #C05050;
-        }
-
-        /* Default active fallback */
-        .day-btn.active {
-            background: white;
-            color: var(--primary-dark);
-            border: none;
-            box-shadow: 0 2px 8px rgba(11, 110, 113, 0.3);
         }
 
         /* Layout Grid */
@@ -235,29 +190,14 @@
         .classroom-section {
             background: var(--card-bg);
             padding: 36px 40px;
-            border-radius: 28px;
+            border-radius: 24px;
             box-shadow: var(--shadow-sm);
-            border: 1.5px solid var(--border);
-            position: relative;
-            overflow: hidden;
+            border: 1px solid var(--border);
             transition: box-shadow 0.2s;
         }
 
         .classroom-section:hover {
             box-shadow: var(--shadow-md);
-        }
-
-        /* little petal deco */
-        .classroom-section::after {
-            content: '';
-            position: absolute;
-            bottom: -30px;
-            right: -20px;
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(17, 138, 142, 0.1) 0%, transparent 70%);
-            pointer-events: none;
         }
 
         .grid-6x5 {
@@ -316,41 +256,41 @@
 
         .seat {
             aspect-ratio: 1 / 1.15;
-            border: 1.5px solid var(--border);
-            border-radius: 20px;
+            border: 1.5px solid #CBD5E1; /* Darker border for visibility */
+            border-radius: 16px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(160deg, #FDF4EB 0%, #F8EBE2 100%);
+            background: var(--card-bg);
             font-size: 0.85rem;
             position: relative;
 
             cursor: pointer;
             transition: all 0.2s ease;
             user-select: none;
-            box-shadow: 0 2px 8px rgba(180, 100, 80, 0.06);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04); /* Slightly stronger shadow */
         }
 
         .seat:not(.empty):hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 8px 20px rgba(17, 138, 142, 0.2);
-            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--border-focus);
             z-index: 10;
         }
 
         .seat.empty {
-            border: 1.5px dashed var(--text-muted);
-            background: #FAEFDF;
+            border: 1.5px dashed #CBD5E1;
+            background: #F8FAFC; /* Slight tint so it doesn't blend completely */
             box-shadow: none;
             cursor: default;
-            opacity: 0.5;
+            opacity: 0.6;
         }
 
         .seat.present {
             border: 2px solid var(--primary);
-            background: linear-gradient(160deg, #E0F2F1 0%, #B2DFDB 100%);
-            box-shadow: 0 4px 12px rgba(17, 138, 142, 0.2);
+            background: var(--secondary);
+            box-shadow: var(--shadow-sm);
             color: var(--primary-dark);
         }
 
@@ -390,16 +330,16 @@
         .teacher-desk {
             width: 55%;
             height: 40px;
-            background: #8B6552;
-            border: 3px solid #634333;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
             border-radius: 8px;
             margin: 20px auto 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: var(--text-main);
             font-weight: 800;
-            letter-spacing: 0.8em;
+            letter-spacing: 0.5em;
             font-size: 1.1rem;
             box-shadow: var(--shadow-sm);
         }
@@ -426,11 +366,10 @@
             bottom: 40px;
             left: 50%;
             transform: translateX(-50%) translateY(100px);
-            background: rgba(17, 138, 142, 0.95);
-            backdrop-filter: blur(8px);
+            background: var(--primary-dark);
             color: white;
             padding: 14px 24px;
-            border-radius: 16px;
+            border-radius: 12px;
             font-weight: 700;
             box-shadow: var(--shadow-lg);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2115,13 +2054,7 @@
                         <button class="btn btn-primary" onclick="downloadPDF()">📄 저장하기</button>
                         <!-- 배치 및 출석 초기화 버튼 제거됨 (사용자 요청) -->
                     </div>
-                    <div class="view-toggle">
-                        <button class="toggle-btn active" id="btnSeating" onclick="switchMode('seating')">🪑 자리
-                            배치도</button>
-                        <button class="toggle-btn" id="btnAttendance" onclick="switchMode('attendance')">📋 출석
-                            명단</button>
-                        <button class="toggle-btn" id="btnPersonal" onclick="switchMode('personal')">🪪 개인 자리표</button>
-                    </div>
+
                     <input type="hidden" id="gasUrl"
                         value="https://script.google.com/macros/s/AKfycbyTNbzVW1DMlAYp6lcrEYKbkR19eRbU-HAazohxuz1HhVg_b6z1QsPFi4A2MgZSMliR/exec">
                     <input type="hidden" id="gasBackupUrl"
@@ -2146,13 +2079,8 @@
             </header>
 
             <div class="seating-container active" id="seatingDisplay"></div>
-            <div class="attendance-container" id="attendanceDisplay"></div>
-            <div class="personal-card-container" id="personalCardDisplay"></div>
             <div id="toast"><span>✅</span> 배치 정보가 자동 저장되었습니다.</div>
     </div> <!-- Close mainApp -->
-
-    <!-- 개인 자리표 일괄 인쇄용 숨긴 컨테이너 -->
-    <div id="printAllContainer"></div>
 
     <div id="loadingOverlay">
         <div class="loader"></div>
@@ -2287,8 +2215,7 @@
             hideLoading();
             if (success) {
                 showToast("학생 명단이 성공적으로 갱신되었습니다.");
-                if (currentMode === 'seating') renderSeating();
-                else renderAttendance();
+                renderSeating();
             } else {
                 showAlert("명단 갱신에 실패했습니다. 인터넷 연결을 확인해주세요.");
             }
@@ -2358,47 +2285,13 @@
         const initialDay = (todayIdx >= 1 && todayIdx <= 5) ? daysMap[todayIdx] : '월';
 
         let currentDay = initialDay;
-        let currentMode = 'seating';
         let currentPeriod = '1';
 
         function selectPeriod(btn) {
             document.querySelectorAll('#periodButtons [data-period]').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentPeriod = btn.dataset.period;
-
-            // 교시가 바뀌면 자리 배치도와 출석부 모두 갱신
-            if (currentMode === 'seating') renderSeating();
-            else renderAttendance();
-        }
-
-        function switchMode(mode) {
-            currentMode = mode;
-            document.getElementById('btnSeating').classList.toggle('active', mode === 'seating');
-            document.getElementById('btnAttendance').classList.toggle('active', mode === 'attendance');
-            document.getElementById('btnPersonal').classList.toggle('active', mode === 'personal');
-
-            const seatingDisp = document.getElementById('seatingDisplay');
-            const attendanceDisp = document.getElementById('attendanceDisplay');
-            const personalDisp = document.getElementById('personalCardDisplay');
-
-            seatingDisp.style.display = 'none';
-            seatingDisp.classList.remove('active');
-            attendanceDisp.style.display = 'none';
-            attendanceDisp.classList.remove('active');
-            personalDisp.style.display = 'none';
-
-            if (mode === 'seating') {
-                seatingDisp.style.display = 'flex';
-                seatingDisp.classList.add('active');
-                renderSeating();
-            } else if (mode === 'attendance') {
-                attendanceDisp.style.display = 'flex';
-                attendanceDisp.classList.add('active');
-                renderAttendance();
-            } else if (mode === 'personal') {
-                personalDisp.style.display = 'flex';
-                renderPersonalCardView();
-            }
+            renderSeating();
         }
 
         document.querySelectorAll('#dayButtons .day-btn').forEach(btn => {
@@ -2406,8 +2299,7 @@
                 document.querySelectorAll('#dayButtons .day-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentDay = btn.dataset.day;
-                if (currentMode === 'seating') renderSeating();
-                else renderAttendance();
+                renderSeating();
             });
         });
 
@@ -2568,8 +2460,7 @@
             closeMemoModal();
             showToast(text ? '📝 메모가 저장되었습니다.' : '🗑️ 메모가 삭제되었습니다.');
 
-            if (currentMode === 'seating') renderSeating();
-            else if (currentMode === 'attendance') renderAttendance();
+            renderSeating();
         }
 
         function clearMemo() {
@@ -2738,7 +2629,12 @@
                 section.setAttribute('data-room', roomName);
                 const roomColorClass = 'color-' + roomName;
 
-                const studentsInPeriod = students.filter(s => s[`${currentDay}${currentPeriod}`] && String(s[`${currentDay}${currentPeriod}`]).trim() !== '');
+                // Calculate unique students for the whole day in this room
+                const uniqueStudentsForDay = students.filter(s => {
+                    const p1 = s[`${currentDay}1`];
+                    const p2 = s[`${currentDay}2`];
+                    return (p1 && String(p1).trim() !== '') || (p2 && String(p2).trim() !== '');
+                });
 
                 section.innerHTML = `
                     <div class="print-title">2학년 자기주도적 학습 자리 배치표</div>
@@ -2748,7 +2644,7 @@
                         </div>
                         <div style="display:flex; gap:10px; align-items:center;">
                             <button class="btn btn-primary" onclick="saveRoomAttendanceToSheet('${roomName}')" style="padding:6px 16px; font-size:0.85rem;">💾 시트 전송</button>
-                            <span class="room-meta">${currentDay}요일 | ${currentPeriod}교시 | ${studentsInPeriod.length}명</span>
+                            <span class="room-meta">${currentDay}요일 | ${uniqueStudentsForDay.length}명</span>
                         </div>
                     </div>
                     <div class="grid-6x5"></div>
@@ -2968,8 +2864,7 @@
 
                     // 현재 보고 있는 화면과 데이터가 일치하면 UI 갱신 (단, 무한 루프 주의)
                     if (currentDay === day && currentPeriod === period) {
-                        if (currentMode === 'seating') renderSeating();
-                        else renderAttendance();
+                        renderSeating();
                     }
                 }
             } catch (error) {
@@ -3011,206 +2906,7 @@
         }
 
 
-        function renderAttendance() {
-            const display = document.getElementById('attendanceDisplay');
-            display.innerHTML = '';
 
-            // 데이터가 아예 없는 경우
-            if (!globalData || globalData.length === 0) {
-                display.innerHTML = `<div class="info-text" style="text-align:center; padding:80px 20px; width:100%; border:2px dashed var(--border); border-radius:30px;">
-                    현재 불러온 학생 명단이 없습니다.<br>상단 [🔄 명단 갱신] 버튼을 눌러 데이터를 불러와주세요.
-                </div>`;
-                return;
-            }
-
-            const roomStudents = getRoomStudents(currentDay);
-            const rooms = ['2-3', '2-4', '2-5', '2-6'];
-
-            // 현재 실제 요일 계산
-            const daysMap = ['일', '월', '화', '수', '목', '금', '토'];
-            const todayIndex = new Date().getDay();
-            const actualToday = daysMap[todayIndex];
-            const isToday = currentDay === actualToday;
-
-            // 해당 교시에 한 명도 없는지 확인
-            let totalInPeriod = 0;
-            rooms.forEach(rn => {
-                totalInPeriod += roomStudents[rn].filter(s => s[`${currentDay}${currentPeriod}`] && String(s[`${currentDay}${currentPeriod}`]).trim() !== '').length;
-            });
-
-            if (totalInPeriod === 0) {
-                // 교시 선택 UI만 먼저 표시
-                const ps = document.createElement('div');
-                ps.id = 'periodButtons';
-                ps.style.cssText = 'display:flex;gap:4px;margin-bottom:20px;justify-content:center;width:fit-content;margin-left:auto;margin-right:auto;';
-                ps.innerHTML = `
-                    <button class="btn day-btn ${currentPeriod === '1' ? 'active' : ''}" data-period="1" onclick="selectPeriod(this)">1교시</button>
-                    <button class="btn day-btn ${currentPeriod === '2' ? 'active' : ''}" data-period="2" onclick="selectPeriod(this)">2교시</button>
-                `;
-                display.appendChild(ps);
-
-                const emptyMsg = document.createElement('div');
-                emptyMsg.className = 'info-text';
-                emptyMsg.style.cssText = 'text-align:center; padding:80px 20px; width:100%; border:2px dashed var(--border); border-radius:30px;';
-                emptyMsg.innerHTML = `<span style="font-size:1.2rem; font-weight:700; color:var(--primary-dark);">${currentDay}요일 ${currentPeriod}교시에 배정된 학생이 없습니다.</span>`;
-                display.appendChild(emptyMsg);
-                return;
-            }
-
-            // 교시 선택 UI
-            const periodSelector = document.createElement('div');
-            periodSelector.id = 'periodButtons';
-            periodSelector.style.cssText = 'display:flex;gap:4px;margin-bottom:20px;justify-content:center;width:fit-content;margin-left:auto;margin-right:auto;';
-            periodSelector.innerHTML = `
-                <button class="btn day-btn ${currentPeriod === '1' ? 'active' : ''}" data-period="1" onclick="selectPeriod(this)">1교시</button>
-                <button class="btn day-btn ${currentPeriod === '2' ? 'active' : ''}" data-period="2" onclick="selectPeriod(this)">2교시</button>
-            `;
-            display.appendChild(periodSelector);
-
-
-            rooms.forEach(roomName => {
-                const students = roomStudents[roomName].filter(s => s[`${currentDay}${currentPeriod}`] && String(s[`${currentDay}${currentPeriod}`]).trim() !== '');
-                if (students.length === 0) return;
-
-                // 해당 반의 데이터를 서버에서 아직 안 불러왔다면 백그라운드에서 불러오기 시작 (로딩창 없이)
-                const dateStr = getTodayDateString();
-                const cacheKey = `synced_${dateStr}_${currentDay}_${currentPeriod}_${roomName}`;
-                if (!sessionStorage.getItem(cacheKey)) {
-                    fetchAttendanceFromSheet(roomName, { silent: true });
-                }
-
-                const section = document.createElement('div');
-                section.className = 'attendance-section';
-                section.innerHTML = `
-                    <div class="classroom-header" style="flex-wrap: wrap; gap: 12px;">
-                        <span class="room-title" style="word-break: keep-all; font-size: clamp(1.6rem, 5vw, 2.1rem); line-height: 1.2;">${roomName}반 출석부 (${currentPeriod}교시)</span>
-                        <div style="display:flex; gap:10px; align-items:center; flex-wrap: wrap; width: 100%; justify-content: flex-start; margin-top: 5px;">
-                            <button class="btn" style="padding:6px 14px; font-size:0.85rem;" onclick="sessionStorage.removeItem('${cacheKey}'); fetchAttendanceFromSheet('${roomName}')">🔄 명단 갱신</button>
-                            <span class="room-meta">${currentDay}요일 | 총 ${students.length}명</span>
-                        </div>
-                    </div>
-                    <div class="table-responsive" style="overflow-x: auto; margin-top: 15px;">
-                        <table class="attendance-table">
-                            <thead>
-                                <tr>
-                                    <th class="col-num">번호</th>
-                                    <th class="col-id">학번</th>
-                                    <th class="col-name">이름</th>
-                                    <th class="col-check">출석여부</th>
-                                    <th class="col-remark">비고</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${students.map((s, idx) => {
-                    const dateStr = getTodayDateString();
-                    const stateKey = `att_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`;
-                    const remarkKey = `rem_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`;
-                    const isChecked = sessionStorage.getItem(stateKey) === 'true';
-                    const remarkValue = sessionStorage.getItem(remarkKey) || '';
-                    return `
-                                    <tr style="color: var(--text-main); ${!isToday ? 'opacity: 0.6; background-color: #f8fafc;' : ''}">
-                                        <td style="color: var(--text-main);">${idx + 1}</td>
-                                        <td style="color: var(--text-muted);">${s.학번}</td>
-                                        <td style="font-weight: 800; color: var(--text-main); font-size: 1.05rem;">${s.이름}</td>
-                                        <td><input type="checkbox" class="attendance-checkbox" data-id="${s.학번}" ${isChecked ? 'checked' : ''} ${!isToday ? 'disabled' : ''} onchange="sessionStorage.setItem('${stateKey}', this.checked)"></td>
-                                        <td><input type="text" class="attendance-remark" data-id="${s.학번}" value="${remarkValue}" placeholder="비고 입력" ${!isToday ? 'disabled' : ''} onchange="sessionStorage.setItem('${remarkKey}', this.value)"></td>
-                                    </tr>
-                                    `;
-                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                    ${!isToday ? `<div style="color: #ef4444; font-size: 0.9rem; margin-top: 15px; text-align: center; font-weight: 600;">⚠️ 오늘은 ${actualToday}요일입니다. ${currentDay}요일 출석체크는 불가능합니다.</div>` : ''}
-                    <button class="btn-save-sheet" onclick="saveAttendanceToSheet('${roomName}', this)" ${!isToday ? 'disabled style="background: #9ca3af; cursor: not-allowed;"' : ''}>💾 ${currentPeriod}교시 ${roomName}반 전체 동기화/저장</button>
-                `;
-                display.appendChild(section);
-            });
-        }
-
-        async function saveAttendanceToSheet(roomName, btn) {
-            // 이중 안전 장치: 다시 한번 현재 요일 확인
-            const daysMap = ['일', '월', '화', '수', '목', '금', '토'];
-            const actualToday = daysMap[new Date().getDay()];
-            if (currentDay !== actualToday) {
-                showAlert(`오늘은 ${actualToday}요일입니다. ${currentDay}요일 출석체크는 불가능합니다.`);
-                return;
-            }
-
-            const gasUrl = document.getElementById('gasUrl').value.trim();
-            const gasBackupInput = document.getElementById('gasBackupUrl');
-            const gasBackupUrl = gasBackupInput ? gasBackupInput.value.trim() : '';
-
-            if (!gasUrl) {
-                showAlert('먼저 Google Apps Script URL을 입력해주세요.');
-                return;
-            }
-
-            showConfirm(`${roomName}반 출석 데이터를 Google 시트로 전송하시겠습니까?`, async () => {
-
-                const roomStudents = getRoomStudents(currentDay)[roomName].filter(s => s[`${currentDay}${currentPeriod}`] && String(s[`${currentDay}${currentPeriod}`]).trim() !== '');
-                const section = btn.closest('.attendance-section');
-                const checkboxes = section.querySelectorAll('.attendance-checkbox');
-
-                const attendanceData = {
-                    date: getTodayDateString(),
-                    day: currentDay,
-                    period: currentPeriod + '교시',
-                    room: roomName, // 구글 시트 날짜 자동 변환 방지용 작은따옴표 추가
-                    supervisor: supervisorName, // 감독 교사 데이터 추가
-                    students: roomStudents.map((s, idx) => {
-                        const checkbox = section.querySelector(`.attendance-checkbox[data-id="${s.학번}"]`);
-                        const remarkInput = section.querySelector(`.attendance-remark[data-id="${s.학번}"]`);
-                        return {
-                            id: s.학번,
-                            name: s.이름,
-                            status: checkbox ? checkbox.checked : false,
-                            remark: remarkInput ? remarkInput.value : ""
-                        };
-                    })
-                };
-
-                const originalText = btn.innerText;
-                btn.disabled = true;
-                btn.innerText = '⌛ 전송 중...';
-
-                try {
-                    const requests = [];
-
-                    // 메인 시트 전송 요청
-                    requests.push(
-                        fetch(gasUrl, {
-                            method: 'POST',
-                            mode: 'no-cors', // GAS web apps often require no-cors for simple requests from different origins
-                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                            body: JSON.stringify(attendanceData)
-                        })
-                    );
-
-                    // 백업 시트 전송 요청 (URL이 올바르게 설정된 경우)
-                    if (gasBackupUrl && gasBackupUrl !== "여기에_백업용_앱스스크립트_URL_입력") {
-                        requests.push(
-                            fetch(gasBackupUrl, {
-                                method: 'POST',
-                                mode: 'no-cors',
-                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                                body: JSON.stringify(attendanceData)
-                            })
-                        );
-                    }
-
-                    await Promise.all(requests);
-
-                    // Note: with no-cors, we won't be able to read the response object, but we can assume success if no error is thrown
-                    showAlert(`${roomName}반 데이터 전송 완료! (구글 시트에서 확인해 주세요)`);
-                } catch (error) {
-                    console.error('Error saving to sheet:', error);
-                    showAlert('전송 중 오류가 발생했습니다. 콘솔 로그를 확인해 주세요.');
-                } finally {
-                    btn.disabled = false;
-                    btn.innerText = originalText;
-                }
-            });
-        }
 
         // 요일 버튼 초기 활성화
         const activeBtn = document.querySelector(`.day-btn[data-day="${currentDay}"]`);
@@ -3264,288 +2960,7 @@
 
         renderSeating();
 
-        // ============================================================
-        // 개인 자리표 기능
-        // ============================================================
 
-        /**
-         * 특정 학생의 주간(월~금) 자리 정보를 반환합니다.
-         * 반환값: { '월': { room: '2-3', seats: { '1': '8', '2': '8' } }, ... }
-         * room이 null이면 해당 요일에 야자 없음
-         */
-        function getStudentWeeklySchedule(student) {
-            const days = ['월', '화', '수', '목', '금'];
-            const rooms = ['2-3', '2-4', '2-5', '2-6'];
-            const result = {};
-
-            days.forEach(day => {
-                result[day] = { room: null, seats: {} };
-                const roomStudents = getRoomStudents(day);
-                rooms.forEach(room => {
-                    const found = roomStudents[room].find(s => s.학번 === student.학번);
-                    if (found) {
-                        const s1 = String(found[`${day}1`] || '').trim();
-                        const s2 = String(found[`${day}2`] || '').trim();
-                        result[day] = {
-                            room: room,
-                            seats: {
-                                '1': s1 || null,
-                                '2': s2 || null
-                            }
-                        };
-                    }
-                });
-            });
-            return result;
-        }
-
-        /**
-         * 개인 자리표 뷰 전체를 렌더링합니다.
-         */
-        function renderPersonalCardView() {
-            const container = document.getElementById('personalCardDisplay');
-            container.innerHTML = '';
-
-            // --- 검색 영역 ---
-            const searchBar = document.createElement('div');
-            searchBar.className = 'personal-card-search-bar';
-            searchBar.innerHTML = `
-                <h3>🪪 개인 자리표 생성</h3>
-                <div style="font-size:0.88rem; color:var(--text-sub); margin-top:-8px; word-break:keep-all;">
-                    학생 이름 또는 학번으로 검색하거나, 전체 학생의 자리표를 한 번에 인쇄하세요.
-                </div>
-                <div class="personal-search-row">
-                    <input type="text" id="personalSearchInput" class="personal-search-input"
-                        placeholder="이름 또는 학번 검색 (예: 윤제민 / 20316)"
-                        oninput="filterPersonalCards(this.value)" />
-                    <button class="btn btn-primary" onclick="filterPersonalCards('')">전체 보기</button>
-                    <button class="btn" onclick="printAllPersonalCards()">🖨️ 전체 인쇄</button>
-                </div>
-            `;
-            container.appendChild(searchBar);
-
-            // --- 카드 그리드 ---
-            const grid = document.createElement('div');
-            grid.className = 'cards-grid';
-            grid.id = 'personalCardsGrid';
-            container.appendChild(grid);
-
-            // 전체 학생 카드 렌더
-            renderPersonalCards(globalData);
-        }
-
-        /**
-         * 검색어로 학생 필터링 후 카드 갱신
-         */
-        function filterPersonalCards(query) {
-            const q = query.trim();
-            const filtered = q === ''
-                ? globalData
-                : globalData.filter(s =>
-                    (s.이름 && s.이름.includes(q)) ||
-                    (s.학번 && String(s.학번).includes(q))
-                );
-            renderPersonalCards(filtered);
-        }
-
-        const DAY_LABELS = { '월': '월', '화': '화', '수': '수', '목': '목', '금': '금' };
-        const DAYS_ORDER = ['월', '화', '수', '목', '금'];
-        const ROOMS_ORDER = ['2-3', '2-4', '2-5', '2-6'];
-
-        /**
-         * 학생 배열을 받아 카드 DOM을 생성하여 그리드에 삽입
-         */
-        function renderPersonalCards(students) {
-            const grid = document.getElementById('personalCardsGrid');
-            if (!grid) return;
-            grid.innerHTML = '';
-
-            if (!students || students.length === 0) {
-                grid.innerHTML = `<div class="info-text" style="padding:40px; text-align:center; border:2px dashed var(--border); border-radius:20px; width:100%;">검색 결과가 없습니다.</div>`;
-                return;
-            }
-
-            students.forEach(student => {
-                const schedule = getStudentWeeklySchedule(student);
-                const card = buildPersonalCard(student, schedule);
-                grid.appendChild(card);
-            });
-        }
-
-        /**
-         * 단일 학생의 카드 DOM 엘리먼트 생성
-         */
-        function buildPersonalCard(student, schedule) {
-            const card = document.createElement('div');
-            card.className = 'student-week-card';
-            card.dataset.studentId = student.학번;
-
-            // 헤더
-            const header = document.createElement('div');
-            header.className = 'card-header';
-            header.innerHTML = `
-                <div>
-                    <div class="card-student-name">${student.이름}</div>
-                    <div class="card-student-id">${student.학번}</div>
-                </div>
-                <div class="card-label">주간 자리표</div>
-            `;
-            card.appendChild(header);
-
-            // 자리 테이블
-            const tableWrap = document.createElement('div');
-            tableWrap.style.overflowX = 'auto';
-
-            // 테이블 헤더: 빈칸 + 월화수목금
-            let tableHTML = `<table class="week-seat-table"><thead><tr><th style="min-width:54px;"></th>`;
-            DAYS_ORDER.forEach(day => {
-                tableHTML += `<th>${day}</th>`;
-            });
-            tableHTML += `</tr></thead><tbody>`;
-
-            // 각 반별로 행 생성
-            ROOMS_ORDER.forEach(room => {
-                tableHTML += `<tr><td class="room-label-cell">${room}반</td>`;
-                DAYS_ORDER.forEach(day => {
-                    const info = schedule[day];
-                    if (info.room === room) {
-                        // 이 요일에 이 반에 배정됨
-                        const seats = info.seats;
-                        const uniqueSeats = [...new Set([seats['1'], seats['2']].filter(s => s))];
-
-                        let displaySeats = '';
-                        if (uniqueSeats.length > 0) {
-                            displaySeats = `<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
-                                ${uniqueSeats.map(s => `<div class="seat-chip-wrap"><span class="seat-chip">${s}번</span></div>`).join('')}
-                            </div>`;
-                        } else {
-                            displaySeats = `<span class="seat-chip">&bull;</span>`;
-                        }
-                        tableHTML += `<td>${displaySeats}</td>`;
-                    } else {
-                        tableHTML += `<td class="seat-empty-cell">—</td>`;
-                    }
-                });
-                tableHTML += `</tr>`;
-            });
-
-            tableHTML += `</tbody></table>`;
-            tableWrap.innerHTML = tableHTML;
-            card.appendChild(tableWrap);
-
-            // 인쇄 버튼
-            const printBtn = document.createElement('button');
-            printBtn.className = 'card-print-btn';
-            printBtn.innerHTML = '🖨️ 이 학생만 인쇄';
-            printBtn.onclick = () => printOnePersonalCard(student, schedule);
-            card.appendChild(printBtn);
-
-            return card;
-        }
-
-        /**
-         * 한 명의 학생 카드를 인쇄
-         */
-        function printOnePersonalCard(student, schedule) {
-            const printContainer = document.getElementById('printAllContainer');
-            printContainer.innerHTML = buildPrintCardHTML(student, schedule);
-            document.body.classList.add('printing-personal-cards');
-            window.print();
-            document.body.classList.remove('printing-personal-cards');
-        }
-
-        /**
-         * 전체 학생 자리표를 한 번에 인쇄
-         */
-        function printAllPersonalCards() {
-            if (!globalData || globalData.length === 0) {
-                showAlert('학생 명단이 없습니다. 먼저 명단을 갱신해 주세요.');
-                return;
-            }
-            const printContainer = document.getElementById('printAllContainer');
-            printContainer.innerHTML = globalData
-                .map(student => buildPrintCardHTML(student, getStudentWeeklySchedule(student)))
-                .join('');
-            document.body.classList.add('printing-personal-cards');
-            window.print();
-            document.body.classList.remove('printing-personal-cards');
-        }
-
-        /**
-         * 인쇄용 HTML 카드 생성 (자리 번호 레이아웃 다이어그램 포함)
-         */
-        function buildPrintCardHTML(student, schedule) {
-            // 각 요일별로 자리번호를 테이블 셀에 표시
-            let headerRow = `<th style="width:60px;"></th>`;
-            DAYS_ORDER.forEach(d => { headerRow += `<th>${d}요일</th>`; });
-
-            let bodyRows = '';
-            ROOMS_ORDER.forEach(room => {
-                bodyRows += `<tr><td class="room-col">${room}반</td>`;
-                DAYS_ORDER.forEach(day => {
-                    const info = schedule[day];
-                    if (info.room === room) {
-                        const seats = info.seats;
-                        const uniqueSeats = [...new Set([seats['1'], seats['2']].filter(s => s))];
-
-                        if (uniqueSeats.length > 0) {
-                            const parts = uniqueSeats.map(s => `<span class="print-seat-num">${s}번</span>`);
-                            bodyRows += `<td>${parts.join('<br>')}</td>`;
-                        } else {
-                            bodyRows += `<td style="color:#ccc;">—</td>`;
-                        }
-                    } else {
-                        bodyRows += `<td style="color:#ccc;">—</td>`;
-                    }
-                });
-                bodyRows += `</tr>`;
-            });
-
-            // 자리 번호 배치도 (5행 × 6열, 번호 1~30)
-            // 번호 체계: 1~6 = 교탁 앞 맨 앞줄 좌→우, 25~30 = 맨 뒷줄
-            let diagramHTML = '';
-            for (let row = 4; row >= 0; row--) {
-                diagramHTML += '<tr>';
-                for (let col = 0; col < 6; col++) {
-                    const seatNum = row * 6 + col + 1;
-                    // 해당 학생이 이 자리를 쓰는 요일들 모으기
-                    const usedDays = [];
-                    DAYS_ORDER.forEach(day => {
-                        const info = schedule[day];
-                        if (info.room) {
-                            Object.values(info.seats).forEach(sn => {
-                                if (sn && parseInt(sn) === seatNum) usedDays.push(day);
-                            });
-                        }
-                    });
-                    const isUsed = usedDays.length > 0;
-                    const usedStyle = isUsed
-                        ? 'background:#118A8E;color:white;font-weight:900;'
-                        : 'background:#f5f5f5;color:#bbb;';
-                    diagramHTML += `<td style="${usedStyle}padding:4px 0px;font-size:14px;text-align:center;border:2px solid #000;border-radius:4px;line-height:1;">`;
-                    diagramHTML += `<div style="font-size:11px;${isUsed ? 'color:rgba(255,255,255,1)' : 'color:#ccc'};font-weight:900;">${seatNum}</div>`;
-                    if (isUsed) diagramHTML += `<div style="font-size:10px;font-weight:900;margin-top:1px;">${usedDays.join(',')}</div>`;
-                    diagramHTML += `</td>`;
-                }
-                diagramHTML += '</tr>';
-            }
-
-            return `
-            <div class="print-card-page">
-                <div class="print-card-header">
-                    <div>
-                        <div class="print-card-title">${student.이름} <span style="font-size:12px;opacity:0.8;font-weight:400;">(${student.학번})</span></div>
-                        <div class="print-card-subtitle">2026학년도 2학년 1학기 야자 개인 자리표</div>
-                    </div>
-                    <div style="font-size:10px;opacity:0.8;">자기주도적 학습</div>
-                </div>
-                <table class="print-seat-table" style="margin:0; border-collapse: collapse; width:auto; border: 3px solid #000;">
-                    <thead><tr>${headerRow}</tr></thead>
-                    <tbody>${bodyRows}</tbody>
-                </table>
-                <div class="print-card-footer">※ 자리는 요일마다 바뀔 수 있습니다. 반드시 해당 요일의 자리를 확인하세요.</div>
-            </div>`;
-        }
 
     </script>
     <script>
