@@ -1941,15 +1941,18 @@
             color: #C05050;
         }
 
-        /* Memo indicator badge on seats */
-        .seat-memo-badge {
-            position: absolute;
-            bottom: 4px;
-            right: 4px;
-            font-size: 0.6rem;
-            pointer-events: none;
-            z-index: 5;
-            line-height: 1;
+        /* Student memo text under name */
+        .student-memo {
+            color: #E63946;
+            /* Vibrant Red */
+            font-weight: 600;
+            margin-top: 4px;
+            width: 90%;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
         }
 
         .seat {
@@ -1973,12 +1976,6 @@
             .memo-textarea {
                 min-height: 80px;
                 font-size: 0.95rem;
-            }
-
-            .seat-memo-badge {
-                bottom: 2px;
-                right: 2px;
-                font-size: 0.5rem;
             }
         }
 
@@ -2044,7 +2041,7 @@
         <header>
             <header>
                 <h1>2026학년도 2학년 1학기 자기주도적 학습 자리 배치도 <small
-                        style="font-size: 0.6rem; opacity: 0.7; vertical-align: middle;">v22</small></h1>
+                        style="font-size: 0.6rem; opacity: 0.7; vertical-align: middle;">MadeBy 박상현T</small></h1>
                 <div class="controls">
                     <div class="btn-group" id="dayButtons">
                         <button class="btn day-btn active" data-day="월">월요일</button>
@@ -2064,7 +2061,7 @@
                     </div>
 
                     <input type="hidden" id="gasUrl"
-                        value="https://script.google.com/macros/s/AKfycbyTNbzVW1DMlAYp6lcrEYKbkR19eRbU-HAazohxuz1HhVg_b6z1QsPFi4A2MgZSMliR/exec">
+                        value="https://script.google.com/macros/s/AKfycbzErg0aBKaZPwHWJ_JcxA5BA0c761ZEb6-ZytRqhczIGzq3O960iMiJqmY2qhPQOvfK/exec">
                     <input type="hidden" id="gasBackupUrl"
                         value="https://script.google.com/macros/s/AKfycbxvmXW2lKnfqYWSW8DiXbucv0KHSn2sxoSClRXJq7qnlPzXkPdytY9b33J6K-SC3UEb/exec">
                     <div class="info-text"
@@ -2118,12 +2115,13 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            showLoading('init', "데이터를 동기화하고 있습니다...");
+            showLoading('init', "학생 명단 및 실시간 출결 정보를 동기화하고 있습니다...");
 
-            // 교사 명단 + 학생 명단만 병렬 로드 (출결 데이터는 로그인 후에 로드)
+            // 교사 명단 + 학생 명단 + 오늘 출결 현황까지 한꺼번에 병렬 로드 (v22 개선)
             await Promise.all([
                 fetchTeacherList(),
-                fetchGlobalData(true)
+                fetchGlobalData(true),
+                fetchAllTodayAttendance(true)
             ]);
 
             if (supervisorName) {
@@ -2141,12 +2139,12 @@
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('displaySupervisorName').innerText = supervisorName;
 
-            // 자리 배치도 즉시 렌더링
+            // 이미 초기 로딩(DOMContentLoaded)에서 데이터를 다 가져왔으므로
+            // 여기서는 별도의 로딩 없이 즉시 렌더링만 진행합니다.
             renderSeating();
-            hideLoading();
 
-            // 출결 데이터는 백그라운드에서 점진적 로드 (각 fetch 완료 시 자동으로 UI 갱신)
-            fetchAllTodayAttendance(true);
+            // 로딩창 닫기
+            hideLoading();
         }
 
         async function handleLogin() {
@@ -2183,9 +2181,7 @@
             await startAppSession(nameInput);
         }
 
-        /**
-         * v20: 구글 시트 '감독교사명단' 탭에서 성함을 실시간으로 불러옵니다.
-         */
+
         async function fetchTeacherList() {
             const gasUrl = document.getElementById('gasUrl').value.trim();
             if (!gasUrl) return;
@@ -2383,23 +2379,65 @@
             const studentsData = activeStudents.map(s => {
                 const dateStr = getTodayDateString();
                 const attKey = `att_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`;
-                const isPresent = sessionStorage.getItem(attKey) === 'true';
+                const attVal = sessionStorage.getItem(attKey);
+                // 좀 더 유연한 불리언 판정 (문자열 "true", "TRUE", "출석" 등 대응)
+                const isPresent = (attVal === 'true' || attVal === 'TRUE' || attVal === true || attVal === '출석');
                 const remark = sessionStorage.getItem(`rem_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`) || "";
+
+                // 해당 학생의 기존 정보 확인
+                const initialStatus = sessionStorage.getItem(`initial_att_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`);
+                let studentExistingSup = sessionStorage.getItem(`sup_val_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`);
+
+                if (!studentExistingSup || studentExistingSup === "선생님") {
+                    studentExistingSup = sessionStorage.getItem(`sup_${dateStr}_${currentDay}_${currentPeriod}_${roomName}`) || "";
+                }
+
+                // 이 학생의 출결 상태(체크박스) 변동 여부 확인
+                let hasStatusChanged = false;
+                if (initialStatus !== null) {
+                    const currentStatusStr = isPresent ? 'true' : 'false';
+                    const initialStatusStr = (initialStatus === 'true' || initialStatus === '출석') ? 'true' : 'false';
+                    if (currentStatusStr !== initialStatusStr) hasStatusChanged = true;
+                }
+
+                // 출결 체크박스가 변했으면 현재 교사, 아니면 기존 교사 유지
+                const finalSup = (hasStatusChanged || !studentExistingSup || studentExistingSup === "선생님")
+                    ? ((typeof supervisorName !== 'undefined' && supervisorName) ? supervisorName : "선생님")
+                    : studentExistingSup;
+
                 return {
                     id: s.학번,
                     name: s.이름,
                     status: isPresent,
-                    remark: remark
+                    remark: remark,
+                    supervisor: finalSup
                 };
+            });
+
+            const dateStr = getTodayDateString();
+            let isAttendanceChanged = false;
+            studentsData.forEach(s => {
+                const initialStatus = sessionStorage.getItem(`initial_att_${dateStr}_${currentDay}_${currentPeriod}_${s.id}`);
+                if (initialStatus !== null) {
+                    if (String(s.status).trim().toLowerCase() !== String(initialStatus).trim().toLowerCase()) {
+                        isAttendanceChanged = true;
+                    }
+                }
             });
 
             const payload = {
                 type: "bulk",
-                date: getTodayDateString(),
+                date: dateStr,
                 day: currentDay,
                 period: currentPeriod + '교시',
-                room: roomName, // 구글 시트 날짜 자동 변환 방지용 작은따옴표 추가
-                supervisor: (typeof supervisorName !== 'undefined' && supervisorName) ? supervisorName : "선생님",
+                room: roomName,
+                supervisor: (function () {
+                    const existingSup = sessionStorage.getItem(`sup_${dateStr}_${currentDay}_${currentPeriod}_${roomName}`);
+                    if (isAttendanceChanged || !existingSup || existingSup === "선생님") {
+                        return (typeof supervisorName !== 'undefined' && supervisorName) ? supervisorName : "선생님";
+                    }
+                    return existingSup;
+                })(),
                 students: studentsData
             };
 
@@ -2518,7 +2556,8 @@
                 clearTimeout(pressTimer);
 
                 if (!isLong && !isMoved) {
-                    const nowPresent = sessionStorage.getItem(attKey) === 'true';
+                    const attVal = sessionStorage.getItem(attKey);
+                    const nowPresent = (attVal === 'true' || attVal === 'TRUE' || attVal === true);
                     sessionStorage.setItem(attKey, !nowPresent);
                     seatElement.classList.toggle('present', !nowPresent);
                 }
@@ -2651,6 +2690,7 @@
                             <span class="room-title ${roomColorClass}">${roomName}반</span>
                         </div>
                         <div style="display:flex; gap:10px; align-items:center;">
+                            <button class="btn" onclick="fetchAttendanceFromSheet('${roomName}', { force: true })" style="padding:6px 12px; font-size:0.85rem; background: var(--bg-card); border: 1px solid var(--border);">🔄 출결 새로고침</button>
                             <button class="btn btn-primary" onclick="saveRoomAttendanceToSheet('${roomName}')" style="padding:6px 16px; font-size:0.85rem;">💾 출결 결과 시트 전송</button>
                             <span class="room-meta">${currentDay}요일 | ${uniqueStudentsForDay.length}명</span>
                         </div>
@@ -2688,15 +2728,30 @@
                             seat.innerHTML = `<div class="student-id">${student.학번}</div><div class="student-name">${student.이름}</div>`;
                         } else {
                             const attKey = `att_${dateStr}_${currentDay}_${currentPeriod}_${student.학번}`;
-                            const isPresent = sessionStorage.getItem(attKey) === 'true';
+                            const attVal = sessionStorage.getItem(attKey);
+                            const isPresent = (attVal === 'true' || attVal === 'TRUE' || attVal === true);
                             if (isPresent) seat.classList.add('present');
 
                             const remarkKey = `rem_${dateStr}_${currentDay}_${currentPeriod}_${student.학번}`;
                             const hasMemo = sessionStorage.getItem(remarkKey);
-                            seat.innerHTML = `<div class="student-id">${student.학번}</div><div class="student-name">${student.이름}</div>`;
+
+                            let memoHtml = "";
                             if (hasMemo) {
-                                seat.innerHTML += `<div class="seat-memo-badge" title="${hasMemo}">📝</div>`;
+                                // 글자 길이에 따른 유동적 폰트 크기 계산 (기본 0.75rem ~ 최소 0.45rem)
+                                const memoLen = hasMemo.length;
+                                let fontSize = 0.75;
+                                if (memoLen > 8) fontSize = 0.65;
+                                if (memoLen > 12) fontSize = 0.55;
+                                if (memoLen > 16) fontSize = 0.45;
+
+                                memoHtml = `<div class="student-memo" style="font-size: ${fontSize}rem;" title="${hasMemo}">${hasMemo}</div>`;
                             }
+
+                            seat.innerHTML = `
+                                 <div class="student-id">${student.학번}</div>
+                                 <div class="student-name">${student.이름}</div>
+                                 ${memoHtml}
+                             `;
                             setupLongPress(seat, student.학번, student.이름, attKey);
                         }
 
@@ -2836,20 +2891,21 @@
          * @param {Object} options - { silent: 로딩창 숨김 여부, day: 명시적 요일, period: 명시적 교시 }
          */
         async function fetchAttendanceFromSheet(roomName, options = {}) {
-            const { silent = false, day = currentDay, period = currentPeriod } = options;
+            const { silent = false, day = currentDay, period = currentPeriod, force = false } = options;
             const gasUrl = document.getElementById('gasUrl').value.trim();
             if (!gasUrl) return;
 
-            // 이미 요쳥 중인 '동일 요일/교시/반' 조합은 중복 실행 방지
             const dateStr = getTodayDateString();
             const fetchId = `${dateStr}_${day}_${period}_${roomName}`;
+
+            // 이미 요청 중이면 중복 방지
             if (fetchingRooms.has(fetchId)) return;
 
             const cacheKey = `synced_${fetchId}`;
-            if (sessionStorage.getItem(cacheKey)) return;
+            if (!force && sessionStorage.getItem(cacheKey)) return;
 
             fetchingRooms.add(fetchId);
-            if (!silent) showLoading('init');
+            if (!silent || force) showLoading('init', `${roomName}반 출결 정보를 가져오는 중...`);
 
             try {
                 const url = `${gasUrl}${gasUrl.includes('?') ? '&' : '?'}date=${encodeURIComponent(dateStr)}&day=${encodeURIComponent(day)}&period=${encodeURIComponent(period + '교시')}&room=${encodeURIComponent(roomName)}`;
@@ -2862,18 +2918,55 @@
 
                 const results = await response.json();
 
-                if (results && typeof results === 'object') {
-                    Object.keys(results).forEach(studentId => {
-                        const data = results[studentId];
-                        sessionStorage.setItem(`att_${dateStr}_${day}_${period}_${studentId}`, data.status);
-                        sessionStorage.setItem(`rem_${dateStr}_${day}_${period}_${studentId}`, data.remark || "");
-                    });
-                    sessionStorage.setItem(cacheKey, 'true');
+                if (results && typeof results === 'object' && !results.error) {
+                    let hasData = false;
+                    let existingSup = "";
+                    Object.keys(results).forEach(key => {
+                        const data = results[key];
+                        if (!data || typeof data !== 'object') return;
 
-                    // 현재 보고 있는 화면과 데이터가 일치하면 UI 갱신 (단, 무한 루프 주의)
+                        // 학번 식별 (키값 자체가 학번이거나, 데이터 내부에 '학번' 필드가 있는 경우 모두 대응)
+                        const studentId = (data['학번'] || key || "").toString().trim();
+                        if (!studentId || studentId === "error" || studentId === "supervisor") return;
+
+                        hasData = true;
+                        // '상태' 열 확인
+                        const rawStatus = String(data['상태'] || data.status || "").trim();
+                        const statusStr = (rawStatus === '출석' || rawStatus.toLowerCase() === 'true') ? 'true' : 'false';
+
+                        sessionStorage.setItem(`att_${dateStr}_${day}_${period}_${studentId}`, statusStr);
+                        sessionStorage.setItem(`rem_${dateStr}_${day}_${period}_${studentId}`, (data['비고'] || data.remark || "").trim());
+
+                        // '감독교사' 열 확인
+                        const rawSup = (data['감독교사'] || data.supervisor || data['감독'] || data.teacher || "").trim();
+                        sessionStorage.setItem(`sup_val_${dateStr}_${day}_${period}_${studentId}`, rawSup);
+
+                        // v22: 변동 감지를 위한 초기 상태 별도 보관
+                        sessionStorage.setItem(`initial_att_${dateStr}_${day}_${period}_${studentId}`, statusStr);
+                        sessionStorage.setItem(`initial_rem_${dateStr}_${day}_${period}_${studentId}`, (data['비고'] || data.remark || "").trim());
+
+                        // 반 전체 대표 감독교사 정보 업데이트
+                        if (rawSup && !existingSup && rawSup !== "선생님") {
+                            existingSup = rawSup;
+                        }
+                    });
+
+                    if (hasData) {
+                        if (existingSup) {
+                            sessionStorage.setItem(`sup_${dateStr}_${day}_${period}_${roomName}`, existingSup);
+                        }
+                        sessionStorage.setItem(cacheKey, 'true');
+                        if (force) showToast(`${roomName}반 출결 정보를 업데이트했습니다.`);
+                    } else if (force) {
+                        showToast(`${roomName}반의 기존 출결 정보가 없습니다.`);
+                    }
+
+                    // 현재 보고 있는 화면과 데이터가 일치하면 UI 갱신
                     if (currentDay === day && currentPeriod === period) {
                         renderSeating();
                     }
+                } else if (force && results && results.error) {
+                    showAlert(`오류 발생: ${results.error}`);
                 }
             } catch (error) {
                 console.error('Fetch error:', error);
@@ -2916,11 +3009,18 @@
 
 
 
-        // 요일 버튼 초기 활성화
-        const activeBtn = document.querySelector(`.day-btn[data-day="${currentDay}"]`);
-        if (activeBtn) {
-            document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
-            activeBtn.classList.add('active');
+        // 요일 버튼 초기 활성화 (교시 버튼에 영향을 주지 않도록 선택자 한정)
+        const activeDayBtn = document.querySelector(`#dayButtons .day-btn[data-day="${currentDay}"]`);
+        if (activeDayBtn) {
+            document.querySelectorAll('#dayButtons .day-btn').forEach(b => b.classList.remove('active'));
+            activeDayBtn.classList.add('active');
+        }
+
+        // 교시 버튼 초기 활성화
+        const activePeriodBtn = document.querySelector(`#periodButtons .day-btn[data-period="${currentPeriod}"]`);
+        if (activePeriodBtn) {
+            document.querySelectorAll('#periodButtons .day-btn').forEach(b => b.classList.remove('active'));
+            activePeriodBtn.classList.add('active');
         }
 
         // Removed createPetals to match the new minimalist theme
