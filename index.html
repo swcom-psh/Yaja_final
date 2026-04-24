@@ -2061,9 +2061,9 @@
                     </div>
 
                     <input type="hidden" id="gasUrl"
-                        value="https://script.google.com/macros/s/AKfycbzErg0aBKaZPwHWJ_JcxA5BA0c761ZEb6-ZytRqhczIGzq3O960iMiJqmY2qhPQOvfK/exec">
+                        value="https://script.google.com/macros/s/AKfycbzZYelGizovHf6K1nENGz8MiwunatL4KKtfS3YjoEvyZiJrDRnC_zrrLTgjjHL2yKVv/exec">
                     <input type="hidden" id="gasBackupUrl"
-                        value="https://script.google.com/macros/s/AKfycbxvmXW2lKnfqYWSW8DiXbucv0KHSn2sxoSClRXJq7qnlPzXkPdytY9b33J6K-SC3UEb/exec">
+                        value="https://script.google.com/macros/s/AKfycbzZYelGizovHf6K1nENGz8MiwunatL4KKtfS3YjoEvyZiJrDRnC_zrrLTgjjHL2yKVv/exec">
                     <div class="info-text"
                         style="display: flex; flex-wrap: wrap; justify-content: space-between; width: 100%;">
                         <div style="display: flex; gap: 8px;">
@@ -2121,7 +2121,7 @@
             await Promise.all([
                 fetchTeacherList(),
                 fetchGlobalData(true),
-                fetchAllTodayAttendance(true)
+                fetchAllTodayAttendance(true, true) // silent=true, force=true 로딩 시 항상 최신 데이터 강제 동기화
             ]);
 
             if (supervisorName) {
@@ -2214,11 +2214,12 @@
         }
 
         async function refreshStudentList() {
-            showLoading('init');
+            showLoading('init', "최신 데이터를 불러오고 있습니다...");
             const success = await fetchGlobalData(true); // 강제 새로고침
+            await fetchAllTodayAttendance(true, true); // 출결 데이터도 서버에서 새로 동기화
             hideLoading();
             if (success) {
-                showToast("학생 명단이 성공적으로 갱신되었습니다.");
+                showToast("데이터가 성공적으로 갱신되었습니다.");
                 renderSeating();
             } else {
                 showAlert("명단 갱신에 실패했습니다. 인터넷 연결을 확인해주세요.");
@@ -2376,53 +2377,42 @@
                 return;
             }
 
-            const studentsData = activeStudents.map(s => {
-                const dateStr = getTodayDateString();
+            const dateStr = getTodayDateString();
+
+            // 1. 먼저 이 반 전체 학생 중 출결 상태가 변한 학생이 있는지 확인
+            let isAnyStatusChanged = false;
+            activeStudents.forEach(s => {
                 const attKey = `att_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`;
                 const attVal = sessionStorage.getItem(attKey);
-                // 좀 더 유연한 불리언 판정 (문자열 "true", "TRUE", "출석" 등 대응)
                 const isPresent = (attVal === 'true' || attVal === 'TRUE' || attVal === true || attVal === '출석');
-                const remark = sessionStorage.getItem(`rem_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`) || "";
-
-                // 해당 학생의 기존 정보 확인
                 const initialStatus = sessionStorage.getItem(`initial_att_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`);
-                let studentExistingSup = sessionStorage.getItem(`sup_val_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`);
 
-                if (!studentExistingSup || studentExistingSup === "선생님") {
-                    studentExistingSup = sessionStorage.getItem(`sup_${dateStr}_${currentDay}_${currentPeriod}_${roomName}`) || "";
-                }
-
-                // 이 학생의 출결 상태(체크박스) 변동 여부 확인
-                let hasStatusChanged = false;
                 if (initialStatus !== null) {
                     const currentStatusStr = isPresent ? 'true' : 'false';
                     const initialStatusStr = (initialStatus === 'true' || initialStatus === '출석') ? 'true' : 'false';
-                    if (currentStatusStr !== initialStatusStr) hasStatusChanged = true;
+                    if (currentStatusStr !== initialStatusStr) isAnyStatusChanged = true;
                 }
+            });
 
-                // 출결 체크박스가 변했으면 현재 교사, 아니면 기존 교사 유지
-                const finalSup = (hasStatusChanged || !studentExistingSup || studentExistingSup === "선생님")
-                    ? ((typeof supervisorName !== 'undefined' && supervisorName) ? supervisorName : "선생님")
-                    : studentExistingSup;
+            // 2. 일괄 적용할 감독교사 이름 결정
+            const currentSup = (typeof supervisorName !== 'undefined' && supervisorName) ? supervisorName : "선생님";
+            const existingRoomSup = sessionStorage.getItem(`sup_${dateStr}_${currentDay}_${currentPeriod}_${roomName}`);
+            const batchSupervisor = (isAnyStatusChanged || !existingRoomSup || existingRoomSup === "선생님") ? currentSup : existingRoomSup;
+
+            // 3. 학생 데이터 생성 (결정된 batchSupervisor 사용)
+            const studentsData = activeStudents.map(s => {
+                const attKey = `att_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`;
+                const attVal = sessionStorage.getItem(attKey);
+                const isPresent = (attVal === 'true' || attVal === 'TRUE' || attVal === true || attVal === '출석');
+                const remark = sessionStorage.getItem(`rem_${dateStr}_${currentDay}_${currentPeriod}_${s.학번}`) || "";
 
                 return {
                     id: s.학번,
                     name: s.이름,
                     status: isPresent,
                     remark: remark,
-                    supervisor: finalSup
+                    supervisor: batchSupervisor
                 };
-            });
-
-            const dateStr = getTodayDateString();
-            let isAttendanceChanged = false;
-            studentsData.forEach(s => {
-                const initialStatus = sessionStorage.getItem(`initial_att_${dateStr}_${currentDay}_${currentPeriod}_${s.id}`);
-                if (initialStatus !== null) {
-                    if (String(s.status).trim().toLowerCase() !== String(initialStatus).trim().toLowerCase()) {
-                        isAttendanceChanged = true;
-                    }
-                }
             });
 
             const payload = {
@@ -2431,13 +2421,7 @@
                 day: currentDay,
                 period: currentPeriod + '교시',
                 room: roomName,
-                supervisor: (function () {
-                    const existingSup = sessionStorage.getItem(`sup_${dateStr}_${currentDay}_${currentPeriod}_${roomName}`);
-                    if (isAttendanceChanged || !existingSup || existingSup === "선생님") {
-                        return (typeof supervisorName !== 'undefined' && supervisorName) ? supervisorName : "선생님";
-                    }
-                    return existingSup;
-                })(),
+                supervisor: batchSupervisor,
                 students: studentsData
             };
 
@@ -2979,7 +2963,7 @@
         }
 
         // 실제 오늘 날짜(현지 시간 기준)의 모든 반/모든 교시 데이터를 한꺼번에 로드 (모달)
-        async function fetchAllTodayAttendance(silent = false) {
+        async function fetchAllTodayAttendance(silent = false, force = false) {
             const rooms = ['2-3', '2-4', '2-5', '2-6'];
             const periods = ['1', '2'];
 
@@ -2995,7 +2979,7 @@
                 const fetchPromises = [];
                 for (const p of periods) {
                     for (const r of rooms) {
-                        fetchPromises.push(fetchAttendanceFromSheet(r, { silent: true, day: actualToday, period: p }));
+                        fetchPromises.push(fetchAttendanceFromSheet(r, { silent: true, day: actualToday, period: p, force: force }));
                     }
                 }
                 await Promise.all(fetchPromises);
