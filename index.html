@@ -2036,7 +2036,6 @@
                 <button class="memo-btn-cancel" onclick="closeMemoModal()">취소</button>
                 <button class="memo-btn-clear" id="memoBtnClear" onclick="clearMemo()">삭제</button>
                 <button class="memo-btn-save" id="memoBtnSave" onclick="saveMemo()">저장</button>
-                <button class="memo-btn-save" id="memoBtnSendPast" onclick="sendPastMemo()" style="display: none; background: #f59e0b;">과거 메모 전송</button>
             </div>
         </div>
     </div>
@@ -2478,16 +2477,14 @@
 
             if (isPastDay) {
                 document.getElementById('memoDateContainer').style.display = 'block';
-                document.getElementById('memoDatePicker').value = '';
-                document.getElementById('memoBtnSave').style.display = 'none';
-                document.getElementById('memoBtnClear').style.display = 'none';
-                document.getElementById('memoBtnSendPast').style.display = 'block';
+                const lastDate = sessionStorage.getItem('last_past_date') || '';
+                document.getElementById('memoDatePicker').value = lastDate;
             } else {
                 document.getElementById('memoDateContainer').style.display = 'none';
-                document.getElementById('memoBtnSave').style.display = 'block';
-                document.getElementById('memoBtnClear').style.display = 'block';
-                document.getElementById('memoBtnSendPast').style.display = 'none';
             }
+
+            document.getElementById('memoBtnSave').style.display = 'block';
+            document.getElementById('memoBtnClear').style.display = 'block';
 
             document.getElementById('memoModal').style.display = 'flex';
 
@@ -2506,6 +2503,29 @@
             const text = document.getElementById('memoTextarea').value.trim();
             const dateStr = getTodayDateString();
             const remarkKey = `rem_${dateStr}_${memoCurrentDay}_${memoCurrentPeriod}_${memoCurrentStudentId}`;
+
+            // 과거 날짜 여부 확인
+            const dMap = ['일', '월', '화', '수', '목', '금', '토'];
+            const actualToday = dMap[new Date().getDay()];
+            const isPastDay = (memoCurrentDay !== actualToday);
+
+            if (isPastDay) {
+                const dateInput = document.getElementById('memoDatePicker').value;
+                if (!dateInput && text) {
+                    showAlert('과거 메모를 기록할 정확한 날짜를 선택해주세요.');
+                    return;
+                }
+                const pastDateKey = `past_date_${memoCurrentDay}_${memoCurrentPeriod}_${memoCurrentStudentId}`;
+                if (text) {
+                    const d = new Date(dateInput);
+                    const formattedDate = `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`;
+                    sessionStorage.setItem(pastDateKey, formattedDate);
+                    sessionStorage.setItem('last_past_date', dateInput); // 다음 입력의 편의성을 위해 기억
+                } else {
+                    sessionStorage.removeItem(pastDateKey);
+                }
+            }
+
             if (text) {
                 sessionStorage.setItem(remarkKey, text);
             } else {
@@ -2513,7 +2533,7 @@
             }
 
             closeMemoModal();
-            showToast(text ? '📝 메모가 저장되었습니다.' : '🗑️ 메모가 삭제되었습니다.');
+            showToast(text ? '📝 메모가 임시 저장되었습니다.' : '🗑️ 메모가 삭제되었습니다.');
 
             renderSeating();
         }
@@ -2522,64 +2542,75 @@
             document.getElementById('memoTextarea').value = '';
         }
 
-        async function sendPastMemo() {
-            if (!memoCurrentStudentId) return;
+        async function sendBulkPastMemos(roomName) {
+            const dMap = ['일', '월', '화', '수', '목', '금', '토'];
+            const actualToday = dMap[new Date().getDay()];
+            if (currentDay === actualToday) return;
             
-            const dateInput = document.getElementById('memoDatePicker').value;
-            const text = document.getElementById('memoTextarea').value.trim();
-            const studentName = document.getElementById('memoStudentName').innerText;
+            const dateStr = getTodayDateString();
+            const prefix = `rem_${dateStr}_${currentDay}_${currentPeriod}_`;
+            const datePrefix = `past_date_${currentDay}_${currentPeriod}_`;
+            
+            const memosToSend = [];
+            
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                if (key && key.startsWith(prefix)) {
+                    const studentId = key.split('_').pop();
+                    const text = sessionStorage.getItem(key);
+                    const pastDate = sessionStorage.getItem(datePrefix + studentId);
+                    
+                    if (text && pastDate) {
+                        const studentObj = globalData.find(s => String(s['학번']) === String(studentId));
+                        if (!studentObj) continue;
 
-            if (!dateInput) {
-                showAlert('과거 메모를 전송할 정확한 날짜를 선택해주세요.');
+                        const attKey = `att_${dateStr}_${currentDay}_${currentPeriod}_${studentId}`;
+                        const isChecked = (sessionStorage.getItem(attKey) === 'true');
+                        if (isChecked) {
+                            showAlert(`${studentObj['이름']} 학생의 출결 기록이 변경되어 있습니다.\n지난 과거의 출결 기록은 앱에서 변경할 수 없습니다.\n체크를 해제하고 시트에서 직접 변경해주세요.`);
+                            return;
+                        }
+
+                        memosToSend.push({
+                            date: pastDate,
+                            day: currentDay,
+                            period: currentPeriod + '교시',
+                            room: roomName,
+                            supervisor: (typeof supervisorName !== 'undefined' && supervisorName) ? supervisorName : "선생님",
+                            student: {
+                                id: studentId,
+                                name: studentObj['이름'],
+                                remark: text,
+                                status: false
+                            }
+                        });
+                    }
+                }
+            }
+
+            if (memosToSend.length === 0) {
+                showAlert("전송할 과거 메모가 없습니다. 먼저 학생을 꾹 눌러 메모를 저장해주세요.");
                 return;
             }
-            if (!text) {
-                showAlert('전송할 메모 내용을 입력해주세요.');
-                return;
-            }
-
-            // 현재 UI 상에 출결 체크(녹색)가 되어있는지 확인
-            // (과거 날짜의 출결은 변경할 수 없음)
-            const dummyDateStr = getTodayDateString(); 
-            const attKey = `att_${dummyDateStr}_${memoCurrentDay}_${memoCurrentPeriod}_${memoCurrentStudentId}`;
-            const isChecked = (sessionStorage.getItem(attKey) === 'true');
-
-            if (isChecked) {
-                showAlert('지난 과거의 출결 기록은 앱에서 변경할 수 없습니다.\n구글 시트에서 직접 변경해주세요.');
-                return;
-            }
-
-            // 날짜 포맷 변환 (YYYY-MM-DD -> YYYY. M. D.)
-            const d = new Date(dateInput);
-            const formattedDate = `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`;
 
             const gasUrl = document.getElementById('gasUrl').value.trim();
             if (!gasUrl) return;
 
             const payload = {
-                type: "past_memo",
-                date: formattedDate,
-                day: memoCurrentDay,
-                period: memoCurrentPeriod + '교시',
-                room: memoCurrentRoom,
-                supervisor: (typeof supervisorName !== 'undefined' && supervisorName) ? supervisorName : "선생님",
-                student: {
-                    id: memoCurrentStudentId,
-                    name: studentName,
-                    remark: text,
-                    status: false // 과거 기록 추가 시 결석 처리
-                }
+                type: "past_memos",
+                memos: memosToSend
             };
 
-            showLoading('upload', "메모를 기록하고 있습니다...");
+            showLoading('upload', "과거 메모 일괄 전송 중...");
             try {
                 await fetch(gasUrl, {
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify(payload)
                 });
-                closeMemoModal();
-                showToast(`${formattedDate} 날짜에 메모가 기록되었습니다.`);
+                
+                showToast(`총 ${memosToSend.length}건의 과거 메모가 시트로 안전하게 전송되었습니다.`);
+                // 성공 후에도 로컬 데이터를 냅두어 시각적으로 유지되도록 함
             } catch (error) {
                 console.error(error);
                 showAlert("전송 중 오류가 발생했습니다.");
@@ -2766,6 +2797,7 @@
                             <span class="room-title ${roomColorClass}">${roomName}반</span>
                         </div>
                         <div style="display:flex; gap:10px; align-items:center;">
+                            ${(currentDay !== actualToday) ? `<button class="btn" onclick="sendBulkPastMemos('${roomName}')" style="padding:6px 16px; font-size:0.85rem; background: #f59e0b; color: white; border: none; font-weight: bold;">📝 과거 메모 일괄 전송</button>` : ''}
                             <button class="btn" onclick="fetchAttendanceFromSheet('${roomName}', { force: true })" style="padding:6px 12px; font-size:0.85rem; background: var(--bg-card); border: 1px solid var(--border);">🔄 출결 새로고침</button>
                             <button class="btn btn-primary" onclick="saveRoomAttendanceToSheet('${roomName}')" style="padding:6px 16px; font-size:0.85rem;">💾 출결 결과 시트 전송</button>
                             <span class="room-meta">${currentDay}요일 | ${uniqueStudentsForDay.length}명</span>
