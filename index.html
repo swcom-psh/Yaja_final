@@ -2027,11 +2027,16 @@
                 <span class="memo-student-name" id="memoStudentName"></span>
                 <span class="memo-student-id" id="memoStudentId"></span>
             </div>
+            <div id="memoDateContainer" style="display: none; margin-bottom: 10px; width: 100%;">
+                <label for="memoDatePicker" style="font-size: 0.85rem; color: var(--text-sub); font-weight: 700; margin-bottom: 4px; display: block;">과거 메모 날짜 선택 (구글 시트 기록용)</label>
+                <input type="date" id="memoDatePicker" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-family: inherit; font-size: 1rem; color: var(--text-main);">
+            </div>
             <textarea class="memo-textarea" id="memoTextarea" placeholder="결석 사유를 입력하세요 (예: 체험학습, 병결 등)"></textarea>
             <div class="memo-modal-btns">
                 <button class="memo-btn-cancel" onclick="closeMemoModal()">취소</button>
-                <button class="memo-btn-clear" onclick="clearMemo()">삭제</button>
-                <button class="memo-btn-save" onclick="saveMemo()">저장</button>
+                <button class="memo-btn-clear" id="memoBtnClear" onclick="clearMemo()">삭제</button>
+                <button class="memo-btn-save" id="memoBtnSave" onclick="saveMemo()">저장</button>
+                <button class="memo-btn-save" id="memoBtnSendPast" onclick="sendPastMemo()" style="display: none; background: #f59e0b;">과거 메모 전송</button>
             </div>
         </div>
     </div>
@@ -2061,9 +2066,9 @@
                     </div>
 
                     <input type="hidden" id="gasUrl"
-                        value="https://script.google.com/macros/s/AKfycbzZYelGizovHf6K1nENGz8MiwunatL4KKtfS3YjoEvyZiJrDRnC_zrrLTgjjHL2yKVv/exec">
+                        value="https://script.google.com/macros/s/AKfycby4opXfNbOGVjC0rnBPg2XoiJiDllGbnrabI-DZ7kqc7qi0IqxNI2mB-lqlIo6APWTM/exec">
                     <input type="hidden" id="gasBackupUrl"
-                        value="https://script.google.com/macros/s/AKfycbzZYelGizovHf6K1nENGz8MiwunatL4KKtfS3YjoEvyZiJrDRnC_zrrLTgjjHL2yKVv/exec">
+                        value="https://script.google.com/macros/s/AKfycby4opXfNbOGVjC0rnBPg2XoiJiDllGbnrabI-DZ7kqc7qi0IqxNI2mB-lqlIo6APWTM/exec">
                     <div class="info-text"
                         style="display: flex; flex-wrap: wrap; justify-content: space-between; width: 100%;">
                         <div style="display: flex; gap: 8px;">
@@ -2450,11 +2455,13 @@
         let memoCurrentStudentId = null;
         let memoCurrentDay = null;
         let memoCurrentPeriod = null;
+        let memoCurrentRoom = null;
 
-        function openMemoModal(studentId, studentName, day, period) {
+        function openMemoModal(studentId, studentName, day, period, room) {
             memoCurrentStudentId = studentId;
             memoCurrentDay = day;
             memoCurrentPeriod = period;
+            memoCurrentRoom = room;
 
             document.getElementById('memoStudentName').innerText = studentName;
             document.getElementById('memoStudentId').innerText = studentId;
@@ -2463,6 +2470,24 @@
             const remarkKey = `rem_${dateStr}_${day}_${period}_${studentId}`;
             const existing = sessionStorage.getItem(remarkKey) || '';
             document.getElementById('memoTextarea').value = existing;
+
+            // 과거 날짜 여부 확인
+            const dMap = ['일', '월', '화', '수', '목', '금', '토'];
+            const actualToday = dMap[new Date().getDay()];
+            const isPastDay = (day !== actualToday);
+
+            if (isPastDay) {
+                document.getElementById('memoDateContainer').style.display = 'block';
+                document.getElementById('memoDatePicker').value = '';
+                document.getElementById('memoBtnSave').style.display = 'none';
+                document.getElementById('memoBtnClear').style.display = 'none';
+                document.getElementById('memoBtnSendPast').style.display = 'block';
+            } else {
+                document.getElementById('memoDateContainer').style.display = 'none';
+                document.getElementById('memoBtnSave').style.display = 'block';
+                document.getElementById('memoBtnClear').style.display = 'block';
+                document.getElementById('memoBtnSendPast').style.display = 'none';
+            }
 
             document.getElementById('memoModal').style.display = 'flex';
 
@@ -2497,6 +2522,72 @@
             document.getElementById('memoTextarea').value = '';
         }
 
+        async function sendPastMemo() {
+            if (!memoCurrentStudentId) return;
+            
+            const dateInput = document.getElementById('memoDatePicker').value;
+            const text = document.getElementById('memoTextarea').value.trim();
+            const studentName = document.getElementById('memoStudentName').innerText;
+
+            if (!dateInput) {
+                showAlert('과거 메모를 전송할 정확한 날짜를 선택해주세요.');
+                return;
+            }
+            if (!text) {
+                showAlert('전송할 메모 내용을 입력해주세요.');
+                return;
+            }
+
+            // 현재 UI 상에 출결 체크(녹색)가 되어있는지 확인
+            // (과거 날짜의 출결은 변경할 수 없음)
+            const dummyDateStr = getTodayDateString(); 
+            const attKey = `att_${dummyDateStr}_${memoCurrentDay}_${memoCurrentPeriod}_${memoCurrentStudentId}`;
+            const isChecked = (sessionStorage.getItem(attKey) === 'true');
+
+            if (isChecked) {
+                showAlert('지난 과거의 출결 기록은 앱에서 변경할 수 없습니다.\n구글 시트에서 직접 변경해주세요.');
+                return;
+            }
+
+            // 날짜 포맷 변환 (YYYY-MM-DD -> YYYY. M. D.)
+            const d = new Date(dateInput);
+            const formattedDate = `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`;
+
+            const gasUrl = document.getElementById('gasUrl').value.trim();
+            if (!gasUrl) return;
+
+            const payload = {
+                type: "past_memo",
+                date: formattedDate,
+                day: memoCurrentDay,
+                period: memoCurrentPeriod + '교시',
+                room: memoCurrentRoom,
+                supervisor: (typeof supervisorName !== 'undefined' && supervisorName) ? supervisorName : "선생님",
+                student: {
+                    id: memoCurrentStudentId,
+                    name: studentName,
+                    remark: text,
+                    status: false // 과거 기록 추가 시 결석 처리
+                }
+            };
+
+            showLoading('upload', "메모를 기록하고 있습니다...");
+            try {
+                await fetch(gasUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(payload)
+                });
+                closeMemoModal();
+                showToast(`${formattedDate} 날짜에 메모가 기록되었습니다.`);
+            } catch (error) {
+                console.error(error);
+                showAlert("전송 중 오류가 발생했습니다.");
+            } finally {
+                hideLoading();
+            }
+        }
+
         /**
          * 좌석에 롱프레스(꾹 누르기) 이벤트를 설정합니다.
          * - 짧게 누르면: 출석/결석 토글 (기존 기능)
@@ -2525,7 +2616,8 @@
                     if (isMoved) return;
                     isLong = true;
                     if (navigator.vibrate) navigator.vibrate(50);
-                    openMemoModal(studentId, studentName, currentDay, currentPeriod);
+                    const roomName = seatElement.closest('.classroom-section').dataset.room;
+                    openMemoModal(studentId, studentName, currentDay, currentPeriod, roomName);
                 }, 600); // 500ms -> 600ms로 약간 여유있게
             };
 
